@@ -3,7 +3,7 @@ export const COLORS = ['purple', 'pink', 'teal', 'gold', 'blue'] as const;
 export type Color = typeof COLORS[number];
 export type Board = (Color | null)[][];
 export type Piece = { id: string; cells: [number, number][]; color: Color };
-export type Game = { board: Board; pieces: (Piece | null)[]; score: number; lines: number; level: number; moves: number; revived: boolean };
+export type Game = { board: Board; pieces: (Piece | null)[]; score: number; lines: number; level: number; moves: number; revived: boolean; completionCounted?: boolean };
 const SHAPES: [number, number][][] = [
   [[0,0]], [[0,0],[0,1]], [[0,0],[1,0]], [[0,0],[0,1],[0,2]],
   [[0,0],[1,0],[2,0]], [[0,0],[0,1],[1,0],[1,1]],
@@ -47,12 +47,19 @@ export const won = (game: Game) => game.score >= goal(game.level).score && game.
 export function revive(game: Game): Game {
   return {...game, board:emptyBoard(), pieces:makePieces(), revived:true};
 }
-export type Save = { game: Game; unlocked: number; best: number; sound: boolean; haptics: boolean; completed: number[] };
+export type Save = { game: Game; unlocked: number; best: number; sound: boolean; haptics: boolean; completed: number[]; puzzlesCompleted: number; lastInterstitialAt: number };
 export function readSave(): Save {
-  const fresh = {game:newGame(),unlocked:1,best:0,sound:true,haptics:true,completed:[]};
+  const fresh: Save = {game:newGame(),unlocked:1,best:0,sound:true,haptics:true,completed:[],puzzlesCompleted:0,lastInterstitialAt:0};
   try {
     const raw = JSON.parse(localStorage.getItem('blockbloom-v1') || 'null');
-    if (raw && Number.isInteger(raw.game?.level) && raw.game.level >= 1 && raw.game.level <= 12 && Array.isArray(raw.game.board) && raw.game.board.length === SIZE && raw.game.board.every((row: unknown) => Array.isArray(row) && row.length === SIZE && row.every(cell => cell === null || COLORS.includes(cell))) && Array.isArray(raw.game.pieces) && raw.game.pieces.length === 3 && raw.game.pieces.every((p: Piece | null) => p === null || (COLORS.includes(p.color) && Array.isArray(p.cells) && p.cells.length > 0 && p.cells.every(cell => Array.isArray(cell) && cell.length === 2 && cell.every(n => Number.isInteger(n) && n >= 0 && n < SIZE)))) && typeof raw.game.score === 'number' && typeof raw.game.lines === 'number' && Array.isArray(raw.completed)) return {...fresh,...raw};
+    if (raw && Number.isInteger(raw.game?.level) && raw.game.level >= 1 && raw.game.level <= 12 && Array.isArray(raw.game.board) && raw.game.board.length === SIZE && raw.game.board.every((row: unknown) => Array.isArray(row) && row.length === SIZE && row.every(cell => cell === null || COLORS.includes(cell))) && Array.isArray(raw.game.pieces) && raw.game.pieces.length === 3 && raw.game.pieces.every((p: Piece | null) => p === null || (COLORS.includes(p.color) && Array.isArray(p.cells) && p.cells.length > 0 && p.cells.every(cell => Array.isArray(cell) && cell.length === 2 && cell.every(n => Number.isInteger(n) && n >= 0 && n < SIZE)))) && typeof raw.game.score === 'number' && typeof raw.game.lines === 'number' && Array.isArray(raw.completed)) {
+      const puzzlesCompleted=Number.isInteger(raw.puzzlesCompleted)&&raw.puzzlesCompleted>=0?raw.puzzlesCompleted:0;
+      return {...fresh,...raw,
+        game:{...raw.game,completionCounted:raw.game.completionCounted??won(raw.game)},
+        puzzlesCompleted,
+        lastInterstitialAt:Number.isInteger(raw.lastInterstitialAt)&&raw.lastInterstitialAt>=0&&raw.lastInterstitialAt<=puzzlesCompleted?raw.lastInterstitialAt:0,
+      };
+    }
   } catch { /* Device storage can be unavailable in private browsing. */ }
   return fresh;
 }

@@ -17,3 +17,10 @@ Available packages and libraries:
 - You ALREADY have ALL the shadcn/ui components and their dependencies installed. So you don't need to install them again.
 - You have ALL the necessary Radix UI components installed.
 - Use prebuilt components from the shadcn/ui library after importing them. Note that these files shouldn't be edited, so make new components if you need to change them.
+
+## Native Android / AdMob
+
+- Capacitor 8 and @capacitor-community/admob 8.2.1 are installed; native Android project generation/build is separate from the Vite preview.
+- All AdMob IDs live in src/config/admob.ts. The Android sync hook copies its app ID into the generated native manifest.
+- Interstitials belong only between puzzles after each 3 completed runs; skip unavailable ads rather than showing late during play.
+- See ANDROID_ADS.md for native setup, test IDs, consent and release requirements.

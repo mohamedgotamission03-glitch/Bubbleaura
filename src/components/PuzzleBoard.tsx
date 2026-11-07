@@ -1,12 +1,16 @@
 import { useRef, useState } from 'react';
 import { Board, fits, Piece, SIZE } from '@/lib/puzzle';
+import { BLOCK_COLORS } from '@/lib/block-colors';
 import { MousePointer2 } from 'lucide-react';
 
 type Props = { board: Board; pieces: (Piece | null)[]; onPlace: (index:number,row:number,col:number)=>void; disabled: boolean };
 export function PieceShape({piece}: {piece:Piece}) {
   const height = Math.max(...piece.cells.map(c=>c[0]))+1;
   const width = Math.max(...piece.cells.map(c=>c[1]))+1;
-  return <span className={`piece-shape ${height > 3 ? 'piece-small' : ''}`} style={{gridTemplateColumns:`repeat(${width}, 1fr)`,gridTemplateRows:`repeat(${height}, 1fr)`}}>{Array.from({length:height*width},(_,i)=> <span key={i} className={piece.cells.some(([r,c])=>r===Math.floor(i/width)&&c===i%width) ? `puzzle-block block-${piece.color}` : 'invisible'} />)}</span>;
+  return <span className={`piece-shape ${height > 3 ? 'piece-small' : ''}`} style={{gridTemplateColumns:`repeat(${width}, 1fr)`,gridTemplateRows:`repeat(${height}, 1fr)`}}>{Array.from({length:height*width},(_,i)=> {
+    const filled=piece.cells.some(([r,c])=>r===Math.floor(i/width)&&c===i%width);
+    return <span key={i} className={filled?'puzzle-block':'invisible'} style={filled?{backgroundColor:BLOCK_COLORS[piece.color],opacity:1}:undefined}/>;
+  })}</span>;
 }
 export default function PuzzleBoard({board,pieces,onPlace,disabled}: Props) {
   const boardRef = useRef<HTMLDivElement>(null);
@@ -32,7 +36,8 @@ export default function PuzzleBoard({board,pieces,onPlace,disabled}: Props) {
       <div ref={boardRef} className="puzzle-board" aria-label="8 by 8 puzzle board" onPointerLeave={()=>{if(!dragging)setPreview(null);}}>
         {board.flatMap((row,r)=>row.map((cell,c)=> {
           const ghost=piece && preview && piece.cells.some(([pr,pc])=>pr+preview.row===r&&pc+preview.col===c);
-          return <button key={`${r}-${c}`} disabled={disabled} aria-label={`Row ${r+1}, column ${c+1}, ${cell ? `${cell} block` : 'empty'}`} onPointerEnter={()=>{if(piece&&!dragging)setPreview({row:r,col:c});}} onFocus={()=>{if(piece)setPreview({row:r,col:c});}} onClick={()=>{if(selected!==null)drop(selected,r,c);}} className={`board-cell ${cell ? `puzzle-block block-${cell}` : ''} ${ghost&&!cell ? valid ? `ghost block-${piece!.color}` : 'ghost-invalid' : ''}`} />;
+          const color=cell?BLOCK_COLORS[cell]:ghost&&valid?BLOCK_COLORS[piece!.color]:ghost?'#ffb2c6':undefined;
+          return <button key={`${r}-${c}`} disabled={disabled} style={color?{backgroundColor:color,opacity:1}:undefined} aria-label={`Row ${r+1}, column ${c+1}, ${cell ? `${cell} block` : 'empty'}`} onPointerEnter={()=>{if(piece&&!dragging)setPreview({row:r,col:c});}} onFocus={()=>{if(piece)setPreview({row:r,col:c});}} onClick={()=>{if(selected!==null)drop(selected,r,c);}} className={`board-cell ${cell ? 'puzzle-block' : ''} ${ghost&&!cell ? valid ? 'ghost' : 'ghost-invalid' : ''}`} />;
         }))}
       </div>
     </div>
