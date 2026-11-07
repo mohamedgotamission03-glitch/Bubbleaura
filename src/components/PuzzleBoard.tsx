@@ -36,12 +36,11 @@ export default function PuzzleBoard({board,pieces,onPlace,disabled}: Props) {
         }))}
       </div>
     </div>
-    <div className="mt-5 flex items-center justify-between px-1"><span className="eyebrow">YOUR BLOCKS</span><span className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground"><MousePointer2 size={12}/> Drag or tap to place</span></div>
-    <div className="piece-tray mt-3">
-      {pieces.map((p,index)=> <button key={p?.id || `empty-${index}`} disabled={!p||disabled} aria-label={p ? `Select ${p.color} piece, ${p.cells.length} blocks` : 'Piece used'} aria-pressed={selected===index} className={`piece-slot ${selected===index&&p ? 'piece-selected' : ''}`} onPointerDown={e=>{if(!p||disabled)return; e.currentTarget.setPointerCapture(e.pointerId); start.current={x:e.clientX,y:e.clientY};moved.current=false;setSelected(index);}} onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId)){if(Math.hypot(e.clientX-start.current.x,e.clientY-start.current.y)>8){moved.current=true;setDragging(true);setPreview(position(e.clientX,e.clientY));}}}} onPointerUp={e=>{e.currentTarget.releasePointerCapture(e.pointerId);if(moved.current){const target=position(e.clientX,e.clientY);if(target)drop(index,target.row,target.col);}setDragging(false);setPreview(null);}} onPointerCancel={()=>{setDragging(false);setPreview(null);}} onClick={e=>{if(e.detail===0)setSelected(index);}}>
-        {p ? <PieceShape piece={p}/> : <span className="text-2xl text-[#d8d0e9]">✓</span>}
+    <p className="placement-hint flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#71558f]" aria-live="polite"><MousePointer2 size={12}/>{piece ? 'Now tap the board to place your block' : 'Drag a block, or tap it then tap the board'}</p>
+    <div className="piece-tray">
+      {pieces.map((p,index)=> <button key={p?.id || `empty-${index}`} disabled={!p||disabled} aria-label={p ? `Select ${p.color} piece, ${p.cells.length} blocks` : 'Piece used'} aria-pressed={selected===index} className={`piece-slot ${selected===index&&p ? 'piece-selected' : ''}`} onPointerDown={e=>{if(!p||disabled)return; e.currentTarget.setPointerCapture(e.pointerId); start.current={x:e.clientX,y:e.clientY};moved.current=false;setSelected(index);}} onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId)){if(Math.hypot(e.clientX-start.current.x,e.clientY-start.current.y)>8){moved.current=true;setDragging(true);setPreview(position(e.clientX,e.clientY));}}}} onPointerUp={e=>{e.currentTarget.hasPointerCapture(e.pointerId)&&e.currentTarget.releasePointerCapture(e.pointerId);if(moved.current){const target=position(e.clientX,e.clientY);if(target)drop(index,target.row,target.col);}setDragging(false);setPreview(null);}} onPointerCancel={()=>{setDragging(false);setPreview(null);}} onClick={e=>{if(e.detail===0)setSelected(index);}}>
+        {p ? <PieceShape piece={p}/> : <span className="text-xl font-bold text-[#80629a]">✓</span>}
       </button>)}
     </div>
-    <p className="mt-3 text-center text-[11px] font-medium text-muted-foreground">{piece ? 'Tap an empty square to place the highlighted block.' : 'Fill a row or column to make room for more.'}</p>
   </>;
 }
