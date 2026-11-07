@@ -1,14 +1,16 @@
 # BlockBloom — Android AdMob setup
 
+For the automated debug APK build and download instructions, see **APK_DOWNLOAD.md**. The GitHub workflow generates the native project, syncs the game, and builds an APK on an Android-capable runner. It has not been executed in this environment.
+
 ## Implemented
 
 - Installed Capacitor 8 core, Android runtime/CLI, and `@capacitor-community/admob` 8.2.1.
 - `capacitor.config.ts` packages the Vite `dist` assets as `com.blockbloom.game`.
-- **All AdMob IDs are in `src/config/admob.ts`.** The configured real Android IDs are:
-  - App (Puzzlev1): `ca-app-pub-2832761207597793~3278020475`
-  - Banner (bnrpuzzlev1): `ca-app-pub-2832761207597793/4862564888`
-  - Interstitial (interpzlv1): `ca-app-pub-2832761207597793/8833599488`
-- `testMode` is **false**: native requests use real ad units. Never click these live ads for testing. Display names are not part of the IDs.
+- **All AdMob IDs are in `src/config/admob.ts`.** The configured Google Android test IDs are:
+  - App: `ca-app-pub-3940256099942544~3347511713`
+  - Anchored adaptive banner: `ca-app-pub-3940256099942544/9214589741`
+  - Interstitial: `ca-app-pub-3940256099942544/1033173712`
+- `testMode` is **true**. Your real IDs are preserved in config comments for a later release. The automated test APK build rejects production mode and non-demo publisher IDs.
 - The native bottom-center adaptive banner uses the reserved bottom space, with dynamic height reservation from the SDK's SizeChanged event. It is hidden while dialogs are open. Banner failure/no-fill never blocks play.
 - Interstitials are preloaded and requested at the transition away from the **3rd, 6th, 9th, … completed puzzle**, before starting the next puzzle. Completing a puzzle means meeting both level goals, not clearing one line or placing one block. Replays count; each completed run is counted once. The count and consumed ad milestone persist with game saves.
 - No interstitial on game over, retry, startup, pause, or mid-move. An ad that isn't ready is skipped for that milestone; it cannot show later during gameplay. A shown ad must close before the next puzzle starts.
@@ -24,9 +26,9 @@ The npm `capacitor:sync:after` hook runs `src/native/configure-admob.mjs` for An
 
 ## Before release and device testing
 
-Your real IDs are configured with `testMode: false`. Sync the Android project before rebuilding so the manifest receives the real app ID. Native project generation and compilation are still required; configuring real IDs does not enable browser ads or guarantee AdMob approval or ad fill.
+The current config is for the requested test APK, with `testMode: true`. For a release build, copy your real IDs from the comments into the three active ID fields, set `testMode: false`, and sync the native Android project before rebuilding so its manifest receives the real app ID. The test-only workflow intentionally refuses that production configuration; a store release needs a separate signed release build.
 
-For development, temporarily use Google's official demo IDs in the config (app `ca-app-pub-3940256099942544~3347511713`, banner `ca-app-pub-3940256099942544/9214589741`, interstitial `ca-app-pub-3940256099942544/1033173712`) with `testMode: true`, or register test devices in AdMob. Never click real ads to test the integration. Restore your real IDs and production mode only for the release build.
+Use the current official Google demo IDs or designated test devices for development. Never click real ads to test the integration. Native project generation and compilation are still required; configuring IDs does not enable browser ads or guarantee AdMob approval or ad fill.
 
 The adapter updates Google UMP consent info on launch and displays the form when required, loading ads only when `canRequestAds` allows it. Before production, configure privacy messages in your AdMob account, supply a privacy policy, set appropriate target-audience/child-directed restrictions, and add a privacy-options entry point if required for your configured regions. Consent failure disables ads but not the game. No production consent configuration or store approval is claimed here.
 
