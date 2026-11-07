@@ -1,0 +1,13 @@
+{
+  "name": "BlockBloom — Block Puzzle",
+  "short_name": "BlockBloom",
+  "description": "A colorful block puzzle. Make space, clear lines, and let your progress bloom.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f1fb",
+  "theme_color": "#f5f1fb",
+  "icons": [{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}
