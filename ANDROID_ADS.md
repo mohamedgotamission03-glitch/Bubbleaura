@@ -1,13 +1,14 @@
-# BlockBloom — Android AdMob test setup
+# BlockBloom — Android AdMob setup
 
 ## Implemented
 
 - Installed Capacitor 8 core, Android runtime/CLI, and `@capacitor-community/admob` 8.2.1.
 - `capacitor.config.ts` packages the Vite `dist` assets as `com.blockbloom.game`.
-- **All AdMob IDs are in `src/config/admob.ts`.** The currently configured Google Android test IDs are:
-  - App: `ca-app-pub-3940256099942544~3347511713`
-  - Anchored adaptive banner: `ca-app-pub-3940256099942544/9214589741`
-  - Interstitial: `ca-app-pub-3940256099942544/1033173712`
+- **All AdMob IDs are in `src/config/admob.ts`.** The configured real Android IDs are:
+  - App (Puzzlev1): `ca-app-pub-2832761207597793~3278020475`
+  - Banner (bnrpuzzlev1): `ca-app-pub-2832761207597793/4862564888`
+  - Interstitial (interpzlv1): `ca-app-pub-2832761207597793/8833599488`
+- `testMode` is **false**: native requests use real ad units. Never click these live ads for testing. Display names are not part of the IDs.
 - The native bottom-center adaptive banner uses the reserved bottom space, with dynamic height reservation from the SDK's SizeChanged event. It is hidden while dialogs are open. Banner failure/no-fill never blocks play.
 - Interstitials are preloaded and requested at the transition away from the **3rd, 6th, 9th, … completed puzzle**, before starting the next puzzle. Completing a puzzle means meeting both level goals, not clearing one line or placing one block. Replays count; each completed run is counted once. The count and consumed ad milestone persist with game saves.
 - No interstitial on game over, retry, startup, pause, or mid-move. An ad that isn't ready is skipped for that milestone; it cannot show later during gameplay. A shown ad must close before the next puzzle starts.
@@ -21,15 +22,19 @@ The Capacitor Android project has not been generated or compiled in this environ
 
 The npm `capacitor:sync:after` hook runs `src/native/configure-admob.mjs` for Android and inserts/updates Google Mobile Ads APPLICATION_ID metadata in `android/app/src/main/AndroidManifest.xml` from the single config file. The native SDK requires this metadata before startup; confirm it exists after syncing. The script is idempotent. Capacitor's generated Android project and AdMob plugin supply their native dependencies; do not install a second competing SDK owner.
 
-## Before switching to real IDs
+## Before release and device testing
 
-In `src/config/admob.ts`, replace the app, banner, and interstitial IDs at the clearly marked REAL-ID locations, then change `testMode` to false. Sync Android again so the manifest receives the new app ID. Use Google's test IDs or designated test devices for all development; never click real ads for testing.
+Your real IDs are configured with `testMode: false`. Sync the Android project before rebuilding so the manifest receives the real app ID. Native project generation and compilation are still required; configuring real IDs does not enable browser ads or guarantee AdMob approval or ad fill.
+
+For development, temporarily use Google's official demo IDs in the config (app `ca-app-pub-3940256099942544~3347511713`, banner `ca-app-pub-3940256099942544/9214589741`, interstitial `ca-app-pub-3940256099942544/1033173712`) with `testMode: true`, or register test devices in AdMob. Never click real ads to test the integration. Restore your real IDs and production mode only for the release build.
 
 The adapter updates Google UMP consent info on launch and displays the form when required, loading ads only when `canRequestAds` allows it. Before production, configure privacy messages in your AdMob account, supply a privacy policy, set appropriate target-audience/child-directed restrictions, and add a privacy-options entry point if required for your configured regions. Consent failure disables ads but not the game. No production consent configuration or store approval is claimed here.
 
 Rewarded ads were not included in this request. The existing revive remains clearly labeled as a demo unless a separate trusted native rewarded adapter is connected. Do not present demo revives as earned AdMob rewards.
 
 ## Device verification checklist
+
+Use demo IDs or designated test devices for this checklist, not live ad clicks.
 
 1. Confirm the native test banner appears at the bottom with the SDK's Test Ad label and does not cover controls or Android navigation insets.
 2. Complete puzzles 1 and 2: no interstitial. Continue after completing puzzle 3: a ready test interstitial appears before the next board starts. Repeat for 6 and 9, including replayed levels.

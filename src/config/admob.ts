@@ -1,14 +1,14 @@
-// Android AdMob IDs — ONE place to change them before release.
+// Android AdMob IDs — single source for ads and the Android manifest sync hook.
 export const ADMOB_CONFIG = {
-  // Keep true while testing. Set false only after replacing the IDs below.
-  testMode: true,
-  // REAL ADMOB APP ID GOES HERE (contains ~, not /).
-  // The Android manifest must use this app ID too; see ANDROID_ADS.md.
-  appId: 'ca-app-pub-3940256099942544~3347511713',
-  // REAL ANDROID BANNER AD UNIT ID GOES HERE.
-  // Google's official anchored adaptive banner test ID:
-  bannerId: 'ca-app-pub-3940256099942544/9214589741',
-  // REAL ANDROID INTERSTITIAL AD UNIT ID GOES HERE.
-  interstitialId: 'ca-app-pub-3940256099942544/1033173712',
+  // PRODUCTION MODE: these are your real IDs, not Google's demo IDs.
+  // Do not click live ads for testing. Use official test IDs or registered test devices.
+  testMode: false,
+  // AdMob app: Puzzlev1. Keep only ca-app-pub-...; labels are not part of IDs.
+  // Copied into the Android manifest by the Capacitor sync hook.
+  appId: 'ca-app-pub-2832761207597793~3278020475',
+  // Banner ad unit: bnrpuzzlev1. Replace here if this unit changes later.
+  bannerId: 'ca-app-pub-2832761207597793/4862564888',
+  // Interstitial ad unit: interpzlv1. Replace here if this unit changes later.
+  interstitialId: 'ca-app-pub-2832761207597793/8833599488',
   puzzlesPerInterstitial: 3,
 } as const;

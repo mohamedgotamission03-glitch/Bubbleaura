@@ -56,7 +56,7 @@ export default function GameScreen({ save, disabled, undoAvailable, bump, onPlac
       </div>
     </main>
     <div className="ad-dock flex shrink-0 items-end justify-center px-4" aria-label="Advertisement area">
-      <div className="banner-slot"><span className="ad-label">AD</span>{!nativeAdsAvailable()&&<span className="text-center leading-4">AdMob banner reserved<br/>Test ads run in the Android build</span>}</div>
+      <div className="banner-slot"><span className="ad-label">AD</span>{!nativeAdsAvailable()&&<span className="text-center leading-4">AdMob banner reserved<br/>Ads require the native Android build</span>}</div>
     </div>
   </div>;
 }
