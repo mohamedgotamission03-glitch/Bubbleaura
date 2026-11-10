@@ -20,7 +20,7 @@ if (!process.argv.includes('--config-only') && existsSync(manifestPath)) {
     if (/android:screenOrientation=["'][^"']*["']/.test(activity)) return activity.replace(/android:screenOrientation=["'][^"']*["']/, 'android:screenOrientation="portrait"');
     return activity.replace(/>$/, ' android:screenOrientation="portrait">');
   });
-  if (!foundMainActivity) throw new Error('Could not find the generated BlockPop MainActivity.');
+  if (!foundMainActivity) throw new Error('Could not find the generated Cubellio MainActivity.');
   writeFileSync(manifestPath, manifest);
 }
 

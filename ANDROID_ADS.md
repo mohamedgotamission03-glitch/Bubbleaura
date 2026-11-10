@@ -1,4 +1,4 @@
-# BlockPop — production AdMob integration
+# Cubellio — production AdMob integration
 
 ## Configuration
 

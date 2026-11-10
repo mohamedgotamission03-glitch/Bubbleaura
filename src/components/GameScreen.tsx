@@ -25,14 +25,14 @@ export default function GameScreen({ save, disabled, undoAvailable, bump, onPlac
     <header className="game-header flex shrink-0 items-center justify-between px-3.5">
       <div className="flex items-center gap-2">
         <img src="/icon.svg" alt="" className="h-8 w-8 rounded-xl"/>
-        <h1 className="brand-text">Block<span>Pop</span></h1>
+        <h1 className="brand-text">Cube<span>llio</span></h1>
       </div>
       <div className="flex gap-0.5">
         <Button variant="ghost" size="icon" className="game-icon" aria-label="How to play" onClick={onHelp}><CircleHelp size={19}/></Button>
         <Button variant="ghost" size="icon" className="game-icon" aria-label="Settings" onClick={onSettings}><Settings2 size={19}/></Button>
       </div>
     </header>
-    <main className="play-area flex flex-col gap-1.5 px-3.5" aria-label="BlockPop game">
+    <main className="play-area flex flex-col gap-1.5 px-3.5" aria-label="Cubellio game">
       <div className="score-bar flex items-center justify-between gap-3">
         <button className="level-badge" onClick={onLevels}><Flag size={13} fill="currentColor"/> Level {game.level}<ChevronRight size={13}/></button>
         <div className="text-center">

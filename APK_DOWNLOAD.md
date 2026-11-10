@@ -1,4 +1,4 @@
-# Download the BlockPop Android app
+# Download the Cubellio Android app
 
 Two manually triggered GitHub workflows are included. They have not been executed by this chat; compiled artifacts appear only after a successful GitHub run.
 
@@ -6,14 +6,14 @@ Two manually triggered GitHub workflows are included. They have not been execute
 
 1. Sync this project to GitHub, including `.github` and `pnpm-lock.yaml`. The workflows must be on the default branch for Run workflow to appear.
 2. Open **Actions → Build Android test APK → Run workflow**.
-3. Wait for the run to succeed. Open it and download **BlockPop-test-ads** under **Artifacts**.
-4. Extract the ZIP and install **BlockPop-test-ads.apk** on your Samsung phone.
+3. Wait for the run to succeed. Open it and download **Cubellio-test-ads** under **Artifacts**.
+4. Extract the ZIP and install **Cubellio-test-ads.apk** on your Samsung phone.
 
 The test workflow automatically changes only its isolated runner copy of the config to Google's official test app/banner/interstitial/rewarded IDs. Your repository remains configured with your real production IDs. The test build rejects real units after this swap. Rewarded test videos now grant an actual SDK-verified revive; the former demo revive is gone.
 
 ## Production version — Google Play / Galaxy Store
 
-Use **Actions → Build Android store release → Run workflow** after configuring the four private signing secrets described in **STORE_RELEASE.md**. This produces **BlockPop-play-release.aab** and **BlockPop-galaxy-release.apk** under **BlockPop-store-release**. Do not use the debug test APK for store submission or use a debug key for a production update.
+Use **Actions → Build Android store release → Run workflow** after configuring the four private signing secrets described in **STORE_RELEASE.md**. This produces **Cubellio-play-release.aab** and **Cubellio-galaxy-release.apk** under **Cubellio-store-release**. Do not use the debug test APK for store submission or use a debug key for a production update.
 
 ## Samsung installation
 

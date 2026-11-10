@@ -1,4 +1,4 @@
-# BlockPop: Google Play and Galaxy Store release
+# Cubellio: Google Play and Galaxy Store release
 
 ## Implemented in the app
 
@@ -33,9 +33,9 @@ Do not use an online public converter for private signing keys. The workflow fai
 1. Sync this project to GitHub.
 2. Open **Actions → Build Android store release → Run workflow**.
 3. Enter a positive **version_code** (start at 1 for a new app; increase for every update) and **version_name** (for example 1.0.0).
-4. After a successful run, download **BlockPop-store-release** under Artifacts and extract it.
-5. Use **BlockPop-play-release.aab** for Google Play. It is signed with the supplied key; for Play App Signing, that key must be the appropriate upload key.
-6. Use **BlockPop-galaxy-release.apk** for Galaxy Store, provided its certificate matches your Galaxy Store signing configuration. Samsung also offers AAB upload/signing options; confirm them in Seller Portal.
+4. After a successful run, download **Cubellio-store-release** under Artifacts and extract it.
+5. Use **Cubellio-play-release.aab** for Google Play. It is signed with the supplied key; for Play App Signing, that key must be the appropriate upload key.
+6. Use **Cubellio-galaxy-release.apk** for Galaxy Store, provided its certificate matches your Galaxy Store signing configuration. Samsung also offers AAB upload/signing options; confirm them in Seller Portal.
 
 This environment has verified the web code/build, not executed the native release workflow or approved either store submission. The workflow verifies signatures and APK 16 KB ZIP alignment. That alignment check is not proof of ELF/native-library compatibility or actual 16 KB device behavior; test third-party SDKs and the app on an appropriate device/emulator before submission.
 
@@ -49,7 +49,7 @@ These cannot be completed by changing code alone:
 - Complete Google Play **Contains ads**, Data Safety, target audience and content-rating declarations based on the Mobile Ads/UMP SDKs, device-local saves and your actual deployment. An absence of an app account does not mean the advertising SDK collects no data.
 - Complete Samsung advertising, privacy, permissions and rating declarations.
 - If children are in the target audience, configure and verify the applicable child-directed/under-age consent flags, Families rules and ad restrictions before release. This app is not claimed to be Families-certified.
-- Supply store listing icons/screenshots, support details and required languages. The sync hook applies the BlockPop name and original `public/icon.svg` artwork to legacy/adaptive Android launcher resources through `src/native/configure-branding.mjs`. Review launcher cropping on devices and export store-specific listing assets; a successful build is not a complete listing. Check name/trademark availability before publishing.
+- Supply store listing icons/screenshots, support details and required languages. The sync hook applies the Cubellio name and original `public/icon.svg` artwork to legacy/adaptive Android launcher resources through `src/native/configure-branding.mjs`. Review launcher cropping on devices and export store-specific listing assets; a successful build is not a complete listing. Check name/trademark availability before publishing.
 - Verify current API/signing/16 KB requirements in both store consoles, test physical Samsung devices, safe areas, background/resume, consent acceptance/refusal, rewarded cancellation/completion/no-fill and interstitial cadence.
 
 For device testing, use **Build Android test APK**, not the production workflow, so you never click your own live ads. See `APK_DOWNLOAD.md`.
