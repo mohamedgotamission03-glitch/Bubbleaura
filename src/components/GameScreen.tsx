@@ -21,18 +21,18 @@ type Props = {
 export default function GameScreen({ save, disabled, undoAvailable, bump, onPlace, onLevels, onSettings, onHelp, onPause, onUndo, onRestart }: Props) {
   const { game } = save;
   const target = goal(game.level);
-  return <div className="phone-game mx-auto flex w-full max-w-[400px] flex-col">
-    <header className="game-header flex shrink-0 items-center justify-between px-4">
-      <div className="flex items-center gap-2.5">
-        <span className="bloom-logo" aria-hidden="true"><i/><i/><i/><i/></span>
-        <h1 className="brand-text">Block<span>Bloom</span></h1>
+  return <div className="phone-game mx-auto flex w-full max-w-[360px] flex-col">
+    <header className="game-header flex shrink-0 items-center justify-between px-3.5">
+      <div className="flex items-center gap-2">
+        <img src="/icon.svg" alt="" className="h-8 w-8 rounded-xl"/>
+        <h1 className="brand-text">Block<span>Pop</span></h1>
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-0.5">
         <Button variant="ghost" size="icon" className="game-icon" aria-label="How to play" onClick={onHelp}><CircleHelp size={19}/></Button>
         <Button variant="ghost" size="icon" className="game-icon" aria-label="Settings" onClick={onSettings}><Settings2 size={19}/></Button>
       </div>
     </header>
-    <main className="play-area flex flex-col gap-2 px-4" aria-label="BlockBloom game">
+    <main className="play-area flex flex-col gap-1.5 px-3.5" aria-label="BlockPop game">
       <div className="score-bar flex items-center justify-between gap-3">
         <button className="level-badge" onClick={onLevels}><Flag size={13} fill="currentColor"/> Level {game.level}<ChevronRight size={13}/></button>
         <div className="text-center">

@@ -1,4 +1,4 @@
-# BlockBloom — production AdMob integration
+# BlockPop — production AdMob integration
 
 ## Configuration
 

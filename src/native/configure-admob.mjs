@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { configureNativeBranding } from './configure-branding.mjs';
 
 if (process.env.CAPACITOR_PLATFORM_NAME === 'android') {
+  configureNativeBranding();
   const manifestPath = 'android/app/src/main/AndroidManifest.xml';
   if (!existsSync(manifestPath)) throw new Error('Generate the Capacitor Android project before syncing AdMob.');
   const config = readFileSync('src/config/admob.ts', 'utf8');

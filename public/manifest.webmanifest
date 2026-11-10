@@ -1,7 +1,7 @@
 {
-  "name": "BlockBloom — Block Puzzle",
-  "short_name": "BlockBloom",
-  "description": "A colorful block puzzle. Make space, clear lines, and let your progress bloom.",
+  "name": "BlockPop — Block Puzzle",
+  "short_name": "BlockPop",
+  "description": "Place. Clear. Pop! Colorful blocks, satisfying line clears, and bite-sized level challenges.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
