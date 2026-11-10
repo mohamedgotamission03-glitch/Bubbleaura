@@ -23,4 +23,5 @@ Available packages and libraries:
 - Capacitor 8 and @capacitor-community/admob 8.2.1 are installed; native Android project generation/build is separate from the Vite preview.
 - All AdMob IDs live in src/config/admob.ts. The Android sync hook copies its app ID into the generated native manifest.
 - Interstitials belong only between puzzles after each 3 completed runs; skip unavailable ads rather than showing late during play.
-- See ANDROID_ADS.md for native setup, test IDs, consent and release requirements.
+- Rewarded revives are opt-in, once per run, and require the native SDK earned-reward callback plus dismissal; never grant demo or click-based rewards.
+- See ANDROID_ADS.md and STORE_RELEASE.md for native setup, isolated test IDs, consent and signed release requirements.

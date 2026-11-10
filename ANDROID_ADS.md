@@ -1,53 +1,49 @@
-# BlockBloom — Android AdMob setup
+# BlockBloom — production AdMob integration
 
-For the automated debug APK build and download instructions, see **APK_DOWNLOAD.md**. The GitHub workflow generates the native project, syncs the game, and builds an APK on an Android-capable runner. It has not been executed in this environment.
+## Configuration
 
-## Implemented
+All runtime and official test IDs are in `src/config/admob.ts`. Production is active (`testMode: false`):
 
-- Installed Capacitor 8 core, Android runtime/CLI, and `@capacitor-community/admob` 8.2.1.
-- `capacitor.config.ts` packages the Vite `dist` assets as `com.blockbloom.game`.
-- **All AdMob IDs are in `src/config/admob.ts`.** The configured Google Android test IDs are:
-  - App: `ca-app-pub-3940256099942544~3347511713`
-  - Anchored adaptive banner: `ca-app-pub-3940256099942544/9214589741`
-  - Interstitial: `ca-app-pub-3940256099942544/1033173712`
-- `testMode` is **true**. Your real IDs are preserved in config comments for a later release. The automated test APK build rejects production mode and non-demo publisher IDs.
-- The native bottom-center adaptive banner uses the reserved bottom space, with dynamic height reservation from the SDK's SizeChanged event. It is hidden while dialogs are open. Banner failure/no-fill never blocks play.
-- Interstitials are preloaded and requested at the transition away from the **3rd, 6th, 9th, … completed puzzle**, before starting the next puzzle. Completing a puzzle means meeting both level goals, not clearing one line or placing one block. Replays count; each completed run is counted once. The count and consumed ad milestone persist with game saves.
-- No interstitial on game over, retry, startup, pause, or mid-move. An ad that isn't ready is skipped for that milestone; it cannot show later during gameplay. A shown ad must close before the next puzzle starts.
-- Initial SDK/consent/preload errors and load timeouts skip ads. There is no fabricated interstitial in the browser. The old game-over demo interstitial has been removed.
+- App: `ca-app-pub-2832761207597793~3278020475`
+- Banner: `ca-app-pub-2832761207597793/4862564888`
+- Interstitial: `ca-app-pub-2832761207597793/8833599488`
+- Standard rewarded: `ca-app-pub-2832761207597793/6453978619`
+- Reward: amount **1**, item **Puzzle revive**.
 
-## Native Android project still needed
+Capacitor 8 and `@capacitor-community/admob` 8.2.1 are installed. SDK integration calls the installed native plugin directly; there is no external rewarded bridge to implement or code to paste into the app.
 
-This environment previews a Vite website. Google's Mobile Ads SDK renders **native Android views**, not browser iframe ads. Installation of the npm plugin alone does not produce an Android app, and the web build is not an APK.
+## Placement and rewards
 
-The Capacitor Android project has not been generated or compiled in this environment. Use an Android/Capacitor build environment to generate the Android project, sync the built web assets and installed plugins, then open/build the project in Android Studio and run it on an emulator or physical Samsung device. Android SDK/JDK/Gradle and release signing are required. Do not replace the preview with a remote URL; package the local built assets.
+- A bottom-center adaptive banner is requested during play. The app reserves its native height and hides it behind dialogs. Failure/no-fill does not block play.
+- A preloaded interstitial is requested on leaving each 3rd completed puzzle, before another board starts. Replays count once per run. Skipped ads are consumed for that milestone, never shown late during play. No interstitial on losing or retry.
+- The game-over button explicitly offers **Watch video · 1 revive**. SDK earned-reward events are checked for amount at least 1. The reward is returned to game logic only after the ad dismisses; one revive is applied at most once per puzzle. Opening/clicking an ad is not a reward.
+- Cancelled, unavailable, failed-load or failed-show videos do not grant a revive. Normal restart is always an alternative; it is only temporarily disabled while an ad is actually being opened/shown.
+- The old browser demo reward has been removed. Browser previews disable the rewarded button rather than pretending an ad was watched.
 
-The npm `capacitor:sync:after` hook runs `src/native/configure-admob.mjs` for Android and inserts/updates Google Mobile Ads APPLICATION_ID metadata in `android/app/src/main/AndroidManifest.xml` from the single config file. The native SDK requires this metadata before startup; confirm it exists after syncing. The script is idempotent. Capacitor's generated Android project and AdMob plugin supply their native dependencies; do not install a second competing SDK owner.
+## Consent and privacy
 
-## Before release and device testing
+The app updates UMP consent information on launch and shows a form when required. Ad requests need `canRequestAds`. Settings exposes **Ad privacy choices** when UMP requires an entry point. Changes re-check consent, discard old ready ads, and stop requests if consent no longer permits them. Network/SDK/consent errors skip ads without blocking normal puzzles.
 
-The current config is for the requested test APK, with `testMode: true`. For a release build, copy your real IDs from the comments into the three active ID fields, set `testMode: false`, and sync the native Android project before rebuilding so its manifest receives the real app ID. The test-only workflow intentionally refuses that production configuration; a store release needs a separate signed release build.
+Publisher AdMob privacy messages, a hosted privacy policy, target audience/child-directed configuration, and store Data Safety declarations must still be configured truthfully by the publisher. This code does not guarantee ad fill, compliance certification or store approval.
 
-Use the current official Google demo IDs or designated test devices for development. Never click real ads to test the integration. Native project generation and compilation are still required; configuring IDs does not enable browser ads or guarantee AdMob approval or ad fill.
+## Native builds
 
-The adapter updates Google UMP consent info on launch and displays the form when required, loading ads only when `canRequestAds` allows it. Before production, configure privacy messages in your AdMob account, supply a privacy policy, set appropriate target-audience/child-directed restrictions, and add a privacy-options entry point if required for your configured regions. Consent failure disables ads but not the game. No production consent configuration or store approval is claimed here.
+Native Google ads do not run in a website or Dyad's iframe. The GitHub Android workflows generate a Capacitor Android project, sync bundled Vite assets, insert the correct AdMob app ID through the sync hook, and compile on an Android-capable runner. No server or remote WebView page is required.
 
-Rewarded ads were not included in this request. The existing revive remains clearly labeled as a demo unless a separate trusted native rewarded adapter is connected. Do not present demo revives as earned AdMob rewards.
+- **Build Android test APK** automatically swaps the isolated runner config to the Google test IDs, including rewarded. It does not change production config in the repository. See `APK_DOWNLOAD.md`.
+- **Build Android store release** keeps the real IDs and builds signed API 36 APK/AAB artifacts using private GitHub signing secrets. See `STORE_RELEASE.md`.
 
-## Device verification checklist
+The store workflow checks APK signature and 16 KB ZIP alignment, but real-device testing and any native ELF alignment checks remain necessary. Web type checking/builds are not native APK compilation or SDK runtime testing.
 
-Use demo IDs or designated test devices for this checklist, not live ad clicks.
+## Verify on device using test ads
 
-1. Confirm the native test banner appears at the bottom with the SDK's Test Ad label and does not cover controls or Android navigation insets.
-2. Complete puzzles 1 and 2: no interstitial. Continue after completing puzzle 3: a ready test interstitial appears before the next board starts. Repeat for 6 and 9, including replayed levels.
-3. Dismiss/reopen the win dialog or restart the app on a completed board: no duplicate completion or duplicate ad request.
-4. Lose/retry/pause/make moves: no interstitial.
-5. Use airplane mode, no-fill, SDK failures, and consent failure: banner may be absent, but puzzles remain playable and level transitions proceed.
-6. Close an interstitial: the next puzzle starts once. Rapid double taps must not create two ads or two new games.
-7. Check Galaxy A and Galaxy S screen widths, large display scaling, navigation gestures, rotation/lifecycle transitions, and background/resume. The browser cannot validate native view placement or SDK callbacks.
+1. Banner is at the bottom, labeled Test Ad by the SDK, and does not cover controls/system navigation.
+2. No interstitial after puzzles 1 and 2. After puzzle 3, continue to another puzzle: only a ready interstitial opens. Repeat at 6 and 9.
+3. Lose, choose the optional rewarded video, complete it, then close it: one revive clears the board and preserves score/lines. A second revive for that run is not offered.
+4. Cancel the video or simulate no-fill/network failure: no reward, normal restart still works.
+5. Repeated taps do not create multiple videos or rewards. Dismissed/reopened win screens do not duplicate puzzle counts.
+6. Test UMP consent and privacy choices, background/resume, narrow Galaxy A devices, Galaxy S gesture navigation, scaling, Android back and 16 KB-compatible environments.
 
-## Galaxy Store release
+Never click live ads for testing. Official test IDs or registered test devices are required during development.
 
-Before submission, create and sign the Android release artifact, verify Samsung's current accepted binary/target API requirements, and provide store icons, screenshots, rating, advertising/privacy disclosures, support details, and privacy policy. Physical-device ad testing, consent setup, signing and Seller Portal submission remain outside this web build.
-
-References: https://developers.google.com/admob/android/test-ads and https://github.com/capacitor-community/admob (installed v8.2.1); https://capacitorjs.com/docs/cli/hooks.
+References: https://github.com/capacitor-community/admob (installed v8.2.1), https://developers.google.com/admob/android/test-ads, https://developers.google.com/admob/android/privacy.

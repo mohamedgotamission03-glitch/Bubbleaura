@@ -28,8 +28,10 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Require Google test ads (never real ads)
-        run: node src/native/prepare-test-android.mjs --config-only
+      - name: Configure and verify Google test ads (never real ads)
+        run: |
+          node src/native/use-test-ads.mjs
+          node src/native/prepare-test-android.mjs --config-only
 
       - name: Build bundled game assets
         run: pnpm run build

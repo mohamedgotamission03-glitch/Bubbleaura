@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 const config = readFileSync('src/config/admob.ts', 'utf8');
 if (!/\btestMode:\s*true\b/.test(config)) throw new Error('The test APK builder requires testMode: true. It will not build live ads.');
 const ids = {};
-for (const field of ['appId', 'bannerId', 'interstitialId']) {
+for (const field of ['appId', 'bannerId', 'interstitialId', 'rewardedId']) {
   const id = config.match(new RegExp(`\\b${field}:\\s*'([^']+)'`))?.[1];
   if (!id || !/^ca-app-pub-3940256099942544[~/]\d+$/.test(id)) throw new Error(`The test APK builder requires an official Google demo ${field}.`);
   ids[field] = id;

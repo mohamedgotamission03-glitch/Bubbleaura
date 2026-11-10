@@ -1,0 +1,122 @@
+name: Build Android store release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: 'Positive version code; increase for every store update'
+        required: true
+        default: '1'
+        type: string
+      version_name:
+        description: 'Public version, for example 1.0.0'
+        required: true
+        default: '1.0.0'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  android-store-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v5
+
+      - name: Require private release signing credentials
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "Missing GitHub Actions secret: $name. See STORE_RELEASE.md."
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/blockbloom-release.jks"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build production web assets
+        run: pnpm run build
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android 36 tools
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Generate and sync Android
+        run: |
+          if [ ! -d android ]; then
+            pnpm exec cap add android
+          fi
+          pnpm exec cap sync android
+          CAPACITOR_PLATFORM_NAME=android node src/native/configure-admob.mjs
+
+      - name: Prepare production signing and version
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/blockbloom-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_VERSION_CODE: ${{ inputs.version_code }}
+          ANDROID_VERSION_NAME: ${{ inputs.version_name }}
+        run: node src/native/prepare-release-android.mjs
+
+      - name: Build signed APK and Android App Bundle
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/blockbloom-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease bundleRelease
+
+      - name: Verify signed artifacts and 16 KB ZIP alignment
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify android/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 16 4 android/app/build/outputs/apk/release/app-release.apk
+          jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab
+          mkdir -p store-artifacts
+          cp android/app/build/outputs/apk/release/app-release.apk store-artifacts/BlockBloom-galaxy-release.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab store-artifacts/BlockBloom-play-release.aab
+
+      - name: Upload store artifacts only (never signing keys)
+        uses: actions/upload-artifact@v6
+        with:
+          name: BlockBloom-store-release
+          path: store-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove temporary signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/blockbloom-release.jks"

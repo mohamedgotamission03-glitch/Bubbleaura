@@ -1,38 +1,34 @@
-# Get the BlockBloom Android test app
+# Download the BlockBloom Android app
 
-The project includes an automated Android APK build in `.github/workflows/android-test-apk.yml`. This workflow has been prepared, not executed in this environment. No compiled APK is attached yet.
+Two manually triggered GitHub workflows are included. They have not been executed by this chat; compiled artifacts appear only after a successful GitHub run.
 
-## Build and download — no shell commands
+## Test APK — no signing account setup
 
-1. Put this project in your GitHub repository, including the hidden `.github` directory and `pnpm-lock.yaml`. The workflow must be on the repository's default branch for its manual Run workflow button to appear.
-2. Open the repository's **Actions** tab. Enable workflows if GitHub asks.
-3. Select **Build Android test APK**.
-4. Click **Run workflow**, choose the branch containing this project, then confirm **Run workflow**.
-5. Wait for the run to finish successfully. The first Android build can take several minutes. An unsuccessful run produces no usable APK; open the failed step to inspect its error.
-6. Open the successful run. Under **Artifacts**, download **BlockBloom-test-ads** while signed into GitHub.
-7. Extract the downloaded ZIP to get **BlockBloom-test-ads.apk**. Transfer it to your Samsung phone and open it to install.
+1. Sync this project to GitHub, including `.github` and `pnpm-lock.yaml`. The workflows must be on the default branch for Run workflow to appear.
+2. Open **Actions → Build Android test APK → Run workflow**.
+3. Wait for the run to succeed. Open it and download **BlockBloom-test-ads** under **Artifacts**.
+4. Extract the ZIP and install **BlockBloom-test-ads.apk** on your Samsung phone.
 
-The build uses GitHub-hosted Android/Java tools. It does not require a signing secret, advertising credentials, or a local Android SDK. GitHub Actions availability and usage limits depend on your account/repository.
+The test workflow automatically changes only its isolated runner copy of the config to Google's official test app/banner/interstitial/rewarded IDs. Your repository remains configured with your real production IDs. The test build rejects real units after this swap. Rewarded test videos now grant an actual SDK-verified revive; the former demo revive is gone.
 
-## Install on Samsung
+## Production version — Google Play / Galaxy Store
 
-The APK requires Android 7.0 / API 24 or newer. If Android asks for permission to install an app from your file manager/browser, allow only the trusted source you are using. Device or organization security policies may prevent sideloading.
+Use **Actions → Build Android store release → Run workflow** after configuring the four private signing secrets described in **STORE_RELEASE.md**. This produces **BlockBloom-play-release.aab** and **BlockBloom-galaxy-release.apk** under **BlockBloom-store-release**. Do not use the debug test APK for store submission or use a debug key for a production update.
 
-Each clean workflow run generates a debug-signed APK. If an older installation of `com.blockbloom.game` has a different signature, Android may reject the update. Uninstall the old test app before reinstalling in that case; **uninstalling removes its saved progress**.
+## Samsung installation
 
-This is a debug build for device testing, not a signed Galaxy Store release.
+Android 7.0/API 24 or newer is required. If prompted to allow installation from your file manager/browser, enable only the trusted source you are using. Device/organization security policy may prevent sideloading.
 
-## Test ads included
+A fresh debug build can have a different signing certificate from an older installation. If Android rejects an update due to signature mismatch, uninstall the old test app first; **uninstalling deletes saved progress**. Do not replace a published app's signing identity to work around an error.
 
-- `src/config/admob.ts` has `testMode: true` and Google's official sample app, anchored adaptive banner, and interstitial IDs.
-- Your real IDs are preserved in comments for a later release. The test build refuses production mode or non-Google-demo publisher IDs.
-- The native sync hook injects the test AdMob app ID into AndroidManifest.xml. The test preparation script also locks the main activity to portrait.
-- A native adaptive test banner is requested at the bottom. Dialogs hide the banner; native ad size is reserved so it does not cover the game.
-- A ready test interstitial is requested after completing each group of **3 puzzles**, only when leaving the win screen for another puzzle. Both level goals must be completed; clearing one line is not a completed puzzle.
-- No interstitial during play, startup, pause, losing, or retry. No-fill, missing readiness, network/consent failures skip ads and do not block the game.
-- Internet access is needed for ad loading. Google controls ad availability; SDK/consent/network errors may still prevent an ad from appearing, even in a successful APK build.
-- Browser previews cannot show these native SDK test ads.
+## Ads and expected behavior
 
-Verify the SDK's Test Ad label on device. Rewarded ads are not configured; the existing rewarded revive remains explicitly a demo.
+- Internet access and SDK/consent eligibility are needed for ad loading. Successful compilation does not guarantee ad fill.
+- Bottom adaptive banner; interstitial only between each 3 completed puzzles.
+- Optional game-over rewarded video, amount 1 / Puzzle revive, awarded only after the native earned-reward callback and dismissal.
+- Cancelled/failed/unavailable ads grant no revive and never block a normal restart. No live ad runs in browser previews.
+- Verify the SDK's Test Ad label when testing. Do not click your real ads.
 
-See `ANDROID_ADS.md` for privacy/consent, device verification, and release requirements.
+If a workflow fails, open its red step and inspect the actual error. No usable APK is uploaded when compilation/signature checks fail. Artifacts expire after 14 days.
+
+See `ANDROID_ADS.md` for SDK behavior and `STORE_RELEASE.md` for signing, privacy and store declarations.
