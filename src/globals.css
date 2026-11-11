@@ -72,9 +72,10 @@
   .line-beam span {color:#fff;font-size:22px;font-weight:900;text-shadow:0 2px 0 #1d4ed8;}
   .column-beam {top:8px;bottom:8px;width:12.5%;height:auto;left:auto;right:auto;}
   .combo-burst {position:absolute;inset:8px;z-index:4;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-  .combo-burst strong {position:relative;z-index:1;color:#fff;font-size:42px;font-weight:900;letter-spacing:-1px;white-space:nowrap;text-shadow:0 4px 0 #1d4ed8,0 0 18px #8ecbff;animation:combo-pop 820ms ease-out both;}
-  .combo-tone-3 strong,.combo-tone-4 strong {color:#fff7d6;text-shadow:0 4px 0 #c2410c,0 0 18px #ffb020;}
-  .perfect-glow {position:absolute;width:140px;height:140px;border-radius:999px;background:#ffb02066;box-shadow:0 0 40px #ff8a00;animation:combo-pop 820ms ease-out both;}
+  .combo-burst strong {position:relative;z-index:1;padding:8px 16px;border-radius:999px;background:#16a34a;color:#fff;font-size:28px;font-weight:900;letter-spacing:-.4px;white-space:nowrap;box-shadow:0 6px 0 #14532d,0 0 22px #86efac;animation:combo-pop 1400ms cubic-bezier(.2,1.4,.4,1) both;}
+  .combo-tone-2 strong {background:#7c3aed;box-shadow:0 6px 0 #4c1d95,0 0 22px #c4b5fd;}
+  .combo-tone-3 strong,.combo-tone-4 strong {background:#f97316;color:#fff;box-shadow:0 6px 0 #9a3412,0 0 22px #fdba74;}
+  .perfect-glow {position:absolute;width:140px;height:140px;border-radius:999px;background:#ffb02066;box-shadow:0 0 40px #ff8a00;animation:combo-pop 1400ms ease-out both;}
   .spark {position:absolute;width:8px;height:8px;border-radius:999px;animation:spark-out 760ms ease-out both;}
   .spark-1{left:18%;top:30%;background:#ff4d94}.spark-2{left:78%;top:24%;background:#ffca35}.spark-3{left:24%;top:68%;background:#20d2b5}.spark-4{left:74%;top:70%;background:#8b3ff0}.spark-5{left:48%;top:18%;background:#fff}.spark-6{left:12%;top:48%;background:#368ff1}.spark-7{left:84%;top:48%;background:#ff9dc4}.spark-8{left:50%;top:78%;background:#ffe593}
   .board-cell.ghost {opacity:1;outline:3px solid #fff;outline-offset:-3px;box-shadow:0 0 0 3px #ffe27a,inset 0 0 0 2px #fff;animation:target-glow 420ms ease-in-out infinite alternate;}
@@ -113,7 +114,7 @@
 @keyframes target-glow {from{filter:brightness(1);}to{filter:brightness(1.22);}}
 @keyframes piece-in {from{transform:scale(.84);}to{transform:scale(1);}}
 @keyframes line-flash {0%{filter:brightness(1);transform:scale(1);}35%{filter:brightness(1.6);transform:scale(1.08);}100%{filter:brightness(1.85);transform:scale(.72);opacity:.12;}}
-@keyframes combo-pop {0%{transform:scale(.72);opacity:0;}18%{transform:scale(1.08);opacity:1;}72%{transform:scale(1);opacity:1;}100%{transform:translateY(-10px) scale(.96);opacity:0;}}
+@keyframes combo-pop {0%{transform:scale(.55) rotate(-6deg);opacity:0;}16%{transform:scale(1.12) rotate(2deg);opacity:1;}70%{transform:scale(1) rotate(0deg);opacity:1;}100%{transform:translateY(-16px) scale(.94);opacity:0;}}
 @keyframes spark-out {0%{transform:scale(.4);opacity:0;}25%{opacity:1;}100%{transform:scale(1.8) translateY(-18px);opacity:0;}}
 @media(min-width:600px) {
   .app-shell {display:flex;flex-direction:column;justify-content:center;align-items:center;}

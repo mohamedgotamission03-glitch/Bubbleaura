@@ -8,30 +8,6 @@ function audio(): AudioContext | null {
   return context;
 }
 
-function hit(at: number, pitch: number, length: number, volume: number) {
-  const ctx = audio();
-  if (!ctx) return;
-  const frames = Math.max(1, Math.floor(ctx.sampleRate * length));
-  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  let noise = 0.17;
-  for (let i = 0; i < frames; i++) {
-    const t = i / ctx.sampleRate;
-    const punch = Math.exp(-t * 34);
-    const click = Math.exp(-t * 90);
-    noise = noise * 0.96 + (Math.random() * 2 - 1) * 0.04;
-    const body = Math.sin(2 * Math.PI * pitch * t * (1 + t * 1.4)) * punch;
-    data[i] = Math.max(-1, Math.min(1, body * 0.82 + noise * click * 1.6));
-  }
-  const source = ctx.createBufferSource();
-  const gain = ctx.createGain();
-  source.buffer = buffer;
-  gain.gain.setValueAtTime(volume, at);
-  source.connect(gain);
-  gain.connect(ctx.destination);
-  source.start(at);
-}
-
 function ready(enabled: boolean) {
   const ctx = audio();
   if (!enabled || !ctx) return null;
@@ -39,61 +15,124 @@ function ready(enabled: boolean) {
   return ctx;
 }
 
-export async function unlockAudio() {
-  const ctx = audio();
-  if (ctx?.state === 'suspended') await ctx.resume();
-}
-
-export function playPlace(enabled: boolean) {
-  const ctx = ready(enabled);
-  if (!ctx) return;
-  hit(ctx.currentTime, 210, 0.07, 0.72);
-}
-
-function sweep(at: number, volume: number) {
+function tone(at: number, freq: number, length: number, volume: number, type: OscillatorType = 'triangle', slide = freq) {
   const ctx = audio();
   if (!ctx) return;
-  const frames = Math.floor(ctx.sampleRate * 0.16);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, at);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(40, slide), at + length);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.018);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(at);
+  osc.stop(at + length + 0.02);
+}
+
+function sparkle(at: number, volume: number) {
+  const ctx = audio();
+  if (!ctx) return;
+  const frames = Math.floor(ctx.sampleRate * 0.12);
   const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < frames; i++) {
     const t = i / frames;
-    data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * t) * (1 - t) * 0.85;
+    data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * t) * (1 - t);
   }
   const source = ctx.createBufferSource();
   const filter = ctx.createBiquadFilter();
   const gain = ctx.createGain();
   source.buffer = buffer;
-  filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(420, at);
-  filter.frequency.exponentialRampToValueAtTime(1800, at + 0.14);
+  filter.type = 'highpass';
+  filter.frequency.setValueAtTime(1400, at);
   gain.gain.setValueAtTime(volume, at);
   source.connect(filter);
   filter.connect(gain);
   gain.connect(ctx.destination);
   source.start(at);
 }
+
+const CHEERS = ['Nice!', 'Good job!', 'Yes!', 'Sweet!'];
+const BIG = ['Awesome!', 'Great!', 'So good!'];
+const HUGE = ['Perfect!', 'Incredible!', 'Brilliant!'];
+let cheerIndex = 0;
+
+export function cheerFor(lines: number) {
+  const bank = lines >= 3 ? HUGE : lines === 2 ? BIG : CHEERS;
+  const phrase = bank[cheerIndex % bank.length];
+  cheerIndex += 1;
+  return phrase;
+}
+
+function voiceFor(synth: SpeechSynthesis) {
+  const voices = synth.getVoices();
+  return voices.find(voice => /en[-_]US/i.test(voice.lang) && /google|samantha|female|natural/i.test(voice.name))
+    || voices.find(voice => /en[-_]US/i.test(voice.lang))
+    || voices.find(voice => /^en/i.test(voice.lang))
+    || null;
+}
+
+export function playCheer(enabled: boolean, phrase: string) {
+  if (!enabled || !phrase || typeof window === 'undefined' || !window.speechSynthesis) return;
+  try {
+    const synth = window.speechSynthesis;
+    const utter = new SpeechSynthesisUtterance(phrase);
+    const voice = voiceFor(synth);
+    synth.cancel();
+    utter.lang = 'en-US';
+    utter.rate = 1.08;
+    utter.pitch = 1.22;
+    utter.volume = 1;
+    if (voice) utter.voice = voice;
+    synth.speak(utter);
+  } catch { /* Some WebViews have no speech voice. The chime still plays. */ }
+}
+
+export async function unlockAudio() {
+  const ctx = audio();
+  if (ctx?.state === 'suspended') await ctx.resume();
+  window.speechSynthesis?.getVoices();
+}
+
+export function playPlace(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const notes = [523, 659, 784, 880];
+  const note = notes[Math.floor(Math.random() * notes.length)];
+  tone(ctx.currentTime, note, 0.11, 0.22, 'triangle', note * 1.02);
+  tone(ctx.currentTime + 0.07, note * 1.5, 0.09, 0.12, 'sine');
+  sparkle(ctx.currentTime, 0.08);
+}
+
 export function playClear(enabled: boolean, lines: number) {
   const ctx = ready(enabled);
   if (!ctx) return;
   const now = ctx.currentTime;
-  sweep(now, lines >= 3 ? 0.42 : 0.28);
-  const bursts = lines >= 3 ? 3 : lines;
-  for (let i = 0; i < bursts; i++) hit(now + 0.03 + i * 0.05, 280 + i * 110, 0.07, lines >= 3 ? 0.78 : 0.62);
+  const notes = lines >= 3 ? [523, 659, 784, 1046] : lines === 2 ? [523, 659, 784] : [659, 880];
+  notes.forEach((note, index) => {
+    tone(now + index * 0.07, note, 0.16, lines >= 3 ? 0.24 : 0.2, 'triangle', note * 1.04);
+    tone(now + index * 0.07, note * 2, 0.1, 0.06, 'sine');
+  });
+  sparkle(now + 0.04, lines >= 3 ? 0.2 : 0.12);
 }
 
 export function playWin(enabled: boolean) {
   const ctx = ready(enabled);
   if (!ctx) return;
-  [260, 340, 430].forEach((pitch, index) => hit(ctx.currentTime + index * 0.06, pitch, 0.09, 0.7));
+  [523, 659, 784, 1046, 1318].forEach((note, index) => tone(ctx.currentTime + index * 0.08, note, 0.2, 0.22, 'triangle'));
+  sparkle(ctx.currentTime + 0.2, 0.16);
 }
 
 export function playUndo(enabled: boolean) {
   const ctx = ready(enabled);
   if (!ctx) return;
-  hit(ctx.currentTime, 150, 0.06, 0.45);
+  tone(ctx.currentTime, 440, 0.1, 0.12, 'sine', 280);
 }
 
 export function stopAudio() {
   if (context?.state === 'running') void context.suspend();
+  window.speechSynthesis?.cancel();
 }

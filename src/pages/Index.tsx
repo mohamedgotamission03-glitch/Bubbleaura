@@ -7,9 +7,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Switch } from '@/components/ui/switch';
 import GameScreen from '@/components/GameScreen';
 import AdPrivacyControls from '@/components/AdPrivacyControls';
-import { canPlay, comboLabel, Game, newGame, readSave, revive, stagePlace, won } from '@/lib/puzzle';
+import { canPlay, Game, newGame, readSave, revive, stagePlace, won } from '@/lib/puzzle';
 import { requestRewardedAd, rewardedAdsAvailable, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
-import { playClear, playPlace, playUndo, playWin, stopAudio, unlockAudio } from '@/lib/audio';
+import { cheerFor, playCheer, playClear, playPlace, playUndo, playWin, stopAudio, unlockAudio } from '@/lib/audio';
 import { ADMOB_CONFIG } from '@/config/admob';
 import { toast } from 'sonner';
 
@@ -70,17 +70,20 @@ const Index = () => {
       return;
     }
     const lines=staged.rows.length+staged.cols.length;
+    const cheer=won(staged.final)?'You did it!':cheerFor(lines);
     pendingFinal.current=staged.final; burstingRef.current=true; setClearing(true);
-    setCombo({id:Date.now(),label:comboLabel(lines),points:gained,lines,rows:staged.rows,cols:staged.cols});
+    setCombo({id:Date.now(),label:cheer,points:gained,lines,rows:staged.rows,cols:staged.cols});
     setSave(prev=>({...prev,game:staged.filled}));
-    playClear(prefs.current.sound,lines);
+    if(won(staged.final)){celebrated.current=true;playWin(prefs.current.sound);}
+    else playClear(prefs.current.sound,lines);
+    playCheer(prefs.current.sound,cheer);
     if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(lines>1?[16,24,16,28]:[18,26,18]);
     timers.current.push(window.setTimeout(()=>{
       pendingFinal.current=null; burstingRef.current=false; setClearing(false);
       setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
       setBump(n=>n+1);
     },430));
-    timers.current.push(window.setTimeout(()=>setCombo(null),980));
+    timers.current.push(window.setTimeout(()=>setCombo(null),1500));
   }
   function undoMove() {
     if(!undo||busy)return;
@@ -139,7 +142,7 @@ const Index = () => {
       <DialogContent className="bloom-dialog max-h-[90dvh] overflow-y-auto rounded-[28px] border-0 p-7 sm:max-w-[430px]" onEscapeKeyDown={e=>{if(busy)e.preventDefault();}} onPointerDownOutside={e=>{if(busy)e.preventDefault();}}>
         <DialogHeader><DialogTitle className="text-center text-2xl font-extrabold tracking-tight">{modal?titles[modal]:''}</DialogTitle><DialogDescription className="pt-2 text-center text-sm leading-6">{modal?descriptions[modal]:''}</DialogDescription></DialogHeader>
         {modal==='levels'&&<div><div className="mt-2 grid grid-cols-3 gap-3">{Array.from({length:12},(_,i)=>i+1).map(level=><Button key={level} disabled={level>save.unlocked||busy} className={`level-tile ${level===game.level?'selected':''}`} variant="outline" onClick={()=>{if(level===game.level)setModal(won(game)?'win':null);else if(game.moves>0&&!won(game)&&canPlay(game)){if(window.confirm('Switch levels? Your current board will be replaced.'))startLevel(level);}else startLevel(level);}}><span>{level>save.unlocked?<LockKeyhole size={20}/>:level}</span><span className="text-[10px]">{save.completed.includes(level)?'✓ Completed':level===game.level?'Current':level>save.unlocked?'Locked':'Play level'}</span></Button>)}</div></div>}
-        {modal==='settings'&&<div className="space-y-3 py-3"><div className="setting-row"><span><Volume2 size={18}/> Sound effects</span><Switch aria-label="Sound effects" checked={save.sound} onCheckedChange={sound=>setSave(prev=>({...prev,sound}))}/></div><div className="setting-row"><span><Zap size={18}/> Haptic feedback</span><Switch aria-label="Haptic feedback" checked={save.haptics} onCheckedChange={haptics=>setSave(prev=>({...prev,haptics}))}/></div><Link className="setting-link" to="/privacy">Privacy Policy <ChevronRight size={18}/></Link><Link className="setting-link" to="/terms">Terms of Use <ChevronRight size={18}/></Link><AdPrivacyControls/><Button className="bloom-button w-full" onClick={()=>setModal(null)}>All set <Check size={17}/></Button></div>}
+        {modal==='settings'&&<div className="space-y-3 py-3"><div className="setting-row"><span><Volume2 size={18}/> Sound effects</span><Switch aria-label="Sound effects" checked={save.sound} onCheckedChange={sound=>{setSave(prev=>({...prev,sound}));if(!sound)stopAudio();}}/></div><div className="setting-row"><span><Zap size={18}/> Haptic feedback</span><Switch aria-label="Haptic feedback" checked={save.haptics} onCheckedChange={haptics=>setSave(prev=>({...prev,haptics}))}/></div><Link className="setting-link" to="/privacy">Privacy Policy <ChevronRight size={18}/></Link><Link className="setting-link" to="/terms">Terms of Use <ChevronRight size={18}/></Link><AdPrivacyControls/><Button className="bloom-button w-full" onClick={()=>setModal(null)}>All set <Check size={17}/></Button></div>}
         {modal==='help'&&<div className="space-y-5 py-3">{[{n:'01',title:'Find a home for your blocks',text:'Drag a block onto the board, or tap a block then tap a square. The top-left of the shape lands where you point.'},{n:'02',title:'Make a line. Make some space.',text:'Fill any full row or column to clear it. Clear several at once for a bonus. Blocks cannot be rotated.'},{n:'03',title:'Pop through every level',text:'Reach the score goal and clear the required lines. New blocks arrive when you use all three. No space left? Try a one-time revive.'}].map(step=><div className="flex gap-3" key={step.n}><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-xs font-bold text-purple-600">{step.n}</span><div><h3 className="text-sm font-bold">{step.title}</h3><p className="mt-1 text-xs leading-6 text-muted-foreground">{step.text}</p></div></div>)}<Button className="bloom-button w-full" onClick={()=>setModal(null)}>Let's play <Play size={15} fill="currentColor"/></Button></div>}
         {modal==='pause'&&<div className="space-y-3 pt-3"><div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[25px] bg-purple-100 text-purple-600"><Pause size={32} fill="currentColor"/></div><Button className="bloom-button w-full" onClick={()=>setModal(won(game)?'win':!canPlay(game)?'over':null)}><Play size={16}/> Back to the blocks</Button><Button className="secondary-button w-full" variant="outline" onClick={()=>setModal('levels')}>Choose a level <Map size={16}/></Button></div>}
         {modal==='restart'&&<div className="space-y-3 pt-4"><Button disabled={busy} className="bloom-button w-full" onClick={()=>startLevel(game.level)}><RotateCcw size={17}/> Restart level {game.level}</Button><Button className="secondary-button w-full" variant="outline" onClick={()=>setModal(null)}>Keep playing</Button></div>}
