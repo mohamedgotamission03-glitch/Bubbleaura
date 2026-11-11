@@ -79,7 +79,7 @@ const Index = () => {
     setSave(prev=>({...prev,game:staged.filled}));
     if(won(staged.final)){celebrated.current=true;playWin(prefs.current.sound);}
     else playClear(prefs.current.sound,lines);
-    playCheer(prefs.current.sound,cheer);
+    playCheer(prefs.current.sound,cheer,lines>=3||streak.current>=3?1.12:lines>=2||streak.current>=2?1.06:1);
     if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(lines>1?[16,24,16,28]:[18,26,18]);
     timers.current.push(window.setTimeout(()=>{
       pendingFinal.current=null; burstingRef.current=false; setClearing(false);
