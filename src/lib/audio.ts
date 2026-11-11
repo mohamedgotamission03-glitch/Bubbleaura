@@ -55,20 +55,19 @@ function sparkle(at: number, volume: number) {
   source.start(at);
 }
 
-const VOICE = "https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/Voiceover%20Pack/Audio%20(Female)/";
-const SMALL = [{ phrase: 'Correct!', file: 'correct.ogg', rate: 0.96 }, { phrase: 'Ready!', file: 'ready.ogg', rate: 1 }];
-const MID = [{ phrase: 'Power up!', file: 'power_up.ogg', rate: 1.02 }, { phrase: 'Level up!', file: 'level_up.ogg', rate: 1.05 }];
-const BIG = [{ phrase: 'Congratulations!', file: 'congratulations.ogg', rate: 1.04 }, { phrase: 'New high score!', file: 'new_highscore.ogg', rate: 1.08 }];
-const WIN = [{ phrase: 'You win!', file: 'you_win.ogg', rate: 1 }, { phrase: 'Mission completed!', file: 'mission_completed.ogg', rate: 1.03 }];
-const CLIPS = [...SMALL, ...MID, ...BIG, ...WIN];
-let cheerIndex = 0;
+const CLIPS = [
+  { phrase: 'Interesting!', file: 'https://commons.wikimedia.org/wiki/Special:FilePath/En-us-interesting.ogg', rate: 0.94 },
+  { phrase: 'Doing good!', file: 'https://commons.wikimedia.org/wiki/Special:FilePath/En-us-good.ogg', rate: 1 },
+  { phrase: 'Excellent!', file: 'https://commons.wikimedia.org/wiki/Special:FilePath/En-us-excellent.ogg', rate: 1.05 },
+  { phrase: 'Perfect!', file: 'https://commons.wikimedia.org/wiki/Special:FilePath/En-us-perfect.ogg', rate: 1.1 },
+];
 let voice: HTMLAudioElement | null = null;
 
-export function cheerFor(lines: number, win = false) {
-  const bank = win ? WIN : lines >= 3 ? BIG : lines === 2 ? MID : SMALL;
-  const phrase = bank[cheerIndex % bank.length].phrase;
-  cheerIndex += 1;
-  return phrase;
+export function cheerFor(lines: number, win = false, streak = 1) {
+  if (win || lines >= 4 || streak >= 4) return 'Perfect!';
+  if (lines >= 3 || streak >= 3) return 'Excellent!';
+  if (lines >= 2 || streak >= 2) return 'Doing good!';
+  return 'Interesting!';
 }
 
 export function playCheer(enabled: boolean, phrase: string) {
@@ -76,7 +75,7 @@ export function playCheer(enabled: boolean, phrase: string) {
   const clip = CLIPS.find(item => item.phrase === phrase);
   if (!clip) return;
   voice?.pause();
-  const next = new Audio(`${VOICE}${clip.file}`);
+  const next = new Audio(clip.file);
   next.preload = 'auto';
   next.playbackRate = clip.rate;
   next.volume = 1;
@@ -87,7 +86,7 @@ export function playCheer(enabled: boolean, phrase: string) {
 export async function unlockAudio() {
   const ctx = audio();
   if (ctx?.state === 'suspended') await ctx.resume();
-  CLIPS.forEach(clip => { const warm = new Audio(`${VOICE}${clip.file}`); warm.preload = 'auto'; });
+  CLIPS.forEach(clip => { const warm = new Audio(clip.file); warm.preload = 'auto'; });
 }
 
 export function playPlace(enabled: boolean) {

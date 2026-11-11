@@ -16,7 +16,7 @@ type Props = {
   onUndo: () => void;
   onRestart: () => void;
   clearing?: boolean;
-  combo?: { id: number; label: string; points: number; lines?: number; rows: number[]; cols: number[] } | null;
+  combo?: { id: number; label: string; points: number; lines?: number; rows: number[]; cols: number[]; streak?: number } | null;
 };
 
 export default function GameScreen({ save, disabled, undoAvailable, bump, onPlace, onLevels, onSettings, onHelp, onPause, onUndo, onRestart, clearing=false, combo=null }: Props) {

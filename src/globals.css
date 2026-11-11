@@ -71,7 +71,9 @@
   .line-beam {position:absolute;left:8px;right:8px;z-index:2;height:12.5%;display:flex;align-items:center;justify-content:center;pointer-events:none;background:#3d8dffcc;box-shadow:0 0 18px #8ecbff;animation:beam-flash 460ms ease-out both;}
   .line-beam span {color:#fff;font-size:22px;font-weight:900;text-shadow:0 2px 0 #1d4ed8;}
   .column-beam {top:8px;bottom:8px;width:12.5%;height:auto;left:auto;right:auto;}
-  .combo-burst {position:absolute;inset:8px;z-index:4;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+  .combo-burst {position:absolute;inset:8px;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;pointer-events:none;}
+  .combo-tag {position:relative;z-index:1;padding:4px 12px;border-radius:999px;background:#ffe27a;color:#3b2508;font-size:16px;font-weight:900;box-shadow:0 4px 0 #b45309,0 0 18px #ffe27a;animation:combo-pop 1400ms cubic-bezier(.2,1.4,.4,1) both;}
+  .is-combo {outline:4px solid #ffe27a;outline-offset:-10px;border-radius:18px;}
   .combo-burst strong {position:relative;z-index:1;padding:8px 16px;border-radius:999px;background:#16a34a;color:#fff;font-size:28px;font-weight:900;letter-spacing:-.4px;white-space:nowrap;box-shadow:0 6px 0 #14532d,0 0 22px #86efac;animation:combo-pop 1400ms cubic-bezier(.2,1.4,.4,1) both;}
   .combo-tone-2 strong {background:#7c3aed;box-shadow:0 6px 0 #4c1d95,0 0 22px #c4b5fd;}
   .combo-tone-3 strong,.combo-tone-4 strong {background:#f97316;color:#fff;box-shadow:0 6px 0 #9a3412,0 0 22px #fdba74;}

@@ -3,7 +3,7 @@ import { Board, fits, Piece, SIZE } from '@/lib/puzzle';
 import { BLOCK_COLORS } from '@/lib/block-colors';
 import { MousePointer2 } from 'lucide-react';
 
-type Props = { board: Board; pieces: (Piece | null)[]; onPlace: (index:number,row:number,col:number)=>void; disabled: boolean; highlightRows?: number[]; highlightCols?: number[]; combo?: { id: number; label: string; points: number; lines?: number } | null };
+type Props = { board: Board; pieces: (Piece | null)[]; onPlace: (index:number,row:number,col:number)=>void; disabled: boolean; highlightRows?: number[]; highlightCols?: number[]; combo?: { id: number; label: string; points: number; lines?: number; streak?: number } | null };
 export function PieceShape({piece}: {piece:Piece}) {
   const height = Math.max(...piece.cells.map(c=>c[0]))+1;
   const width = Math.max(...piece.cells.map(c=>c[1]))+1;
@@ -45,7 +45,7 @@ export default function PuzzleBoard({board,pieces,onPlace,disabled,highlightRows
       </div>
       {highlightRows.map((row,index)=><div key={`row-${row}`} className="line-beam" style={{top:`${row*12.5}%`}}>{index===0&&<span>+{combo?.points??0}</span>}</div>)}
       {highlightCols.map(col=><div key={`col-${col}`} className="line-beam column-beam" style={{left:`${col*12.5}%`}}/>)}
-      {combo?.label&&<div key={combo.id} className={`combo-burst combo-tone-${Math.min(combo.lines??2,4)}`} aria-live="polite"><strong>{combo.label}</strong>{(combo.lines??0)>=3&&<em className="perfect-glow" aria-hidden="true"/>}{[1,2,3,4,5,6,7,8,9,10].map(spark=><i key={spark} className={`spark spark-${spark}`}/>)}</div>}
+      {combo?.label&&<div key={combo.id} className={`combo-burst combo-tone-${Math.min(combo.lines??1,4)} ${(combo.streak??0)>=2?'is-combo':''}`} aria-live="polite">{(combo.streak??0)>=2&&<b className="combo-tag">Combo {combo.streak}</b>}<strong>{combo.label}</strong>{(combo.streak??0)>=2&&<em className="perfect-glow" aria-hidden="true"/>}{[1,2,3,4,5,6,7,8,9,10].map(spark=><i key={spark} className={`spark spark-${spark}`}/>)}</div>}
     </div>
     <p className="placement-hint flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#e7ecff]" aria-live="polite"><MousePointer2 size={12}/>{piece ? 'Now tap the board to place your block' : 'Drag a block, or tap it then tap the board'}</p>
     <div className="piece-tray">

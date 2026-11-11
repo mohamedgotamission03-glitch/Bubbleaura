@@ -23,7 +23,7 @@ const Index = () => {
   const [bump,setBump] = useState(0);
   const [storageWarning,setStorageWarning] = useState(false);
   const [clearing,setClearing] = useState(false);
-  const [combo,setCombo] = useState<{id:number;label:string;points:number;lines:number;rows:number[];cols:number[]}|null>(null);
+  const [combo,setCombo] = useState<{id:number;label:string;points:number;lines:number;rows:number[];cols:number[];streak:number}|null>(null);
   const timers = useRef<number[]>([]);
   const pendingFinal = useRef<Game|null>(null);
   const burstingRef = useRef(false);
@@ -31,6 +31,7 @@ const Index = () => {
   const prefs = useRef({sound:true,music:true,haptics:true});
   const transitioning = useRef(false);
   const rewardPending = useRef(false);
+  const streak = useRef(0);
   prefs.current={sound:save.sound,music:false,haptics:save.haptics};
   function clearTimers() { timers.current.forEach(id=>window.clearTimeout(id)); timers.current=[]; }
   useEffect(()=>{
@@ -66,13 +67,15 @@ const Index = () => {
     if(!staged.rows.length&&!staged.cols.length){
       pendingFinal.current=null;
       setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
+      streak.current=0;
       playPlace(prefs.current.sound); if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(12); setBump(n=>n+1);
       return;
     }
     const lines=staged.rows.length+staged.cols.length;
-    const cheer=cheerFor(lines,won(staged.final));
+    streak.current+=1;
+    const cheer=cheerFor(lines,won(staged.final),streak.current);
     pendingFinal.current=staged.final; burstingRef.current=true; setClearing(true);
-    setCombo({id:Date.now(),label:cheer,points:gained,lines,rows:staged.rows,cols:staged.cols});
+    setCombo({id:Date.now(),label:cheer,points:gained,lines,rows:staged.rows,cols:staged.cols,streak:Math.max(streak.current,lines)});
     setSave(prev=>({...prev,game:staged.filled}));
     if(won(staged.final)){celebrated.current=true;playWin(prefs.current.sound);}
     else playClear(prefs.current.sound,lines);
@@ -87,10 +90,11 @@ const Index = () => {
   }
   function undoMove() {
     if(!undo||busy)return;
-    finishClear(); setSave(prev=>({...prev,game:undo})); setUndo(null); playUndo(prefs.current.sound);
+    streak.current=0; finishClear(); setSave(prev=>({...prev,game:undo})); setUndo(null); playUndo(prefs.current.sound);
   }
   async function startLevel(level?:number) {
     if(transitioning.current)return;
+    streak.current=0;
     finishClear();
     transitioning.current=true;
     try {
