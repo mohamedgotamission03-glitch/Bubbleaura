@@ -50,12 +50,36 @@ export function playPlace(enabled: boolean) {
   hit(ctx.currentTime, 210, 0.07, 0.72);
 }
 
+function sweep(at: number, volume: number) {
+  const ctx = audio();
+  if (!ctx) return;
+  const frames = Math.floor(ctx.sampleRate * 0.16);
+  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < frames; i++) {
+    const t = i / frames;
+    data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * t) * (1 - t) * 0.85;
+  }
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  source.buffer = buffer;
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(420, at);
+  filter.frequency.exponentialRampToValueAtTime(1800, at + 0.14);
+  gain.gain.setValueAtTime(volume, at);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  source.start(at);
+}
 export function playClear(enabled: boolean, lines: number) {
   const ctx = ready(enabled);
   if (!ctx) return;
   const now = ctx.currentTime;
-  const bursts = Math.min(4, lines);
-  for (let i = 0; i < bursts; i++) hit(now + i * 0.045, 240 + i * 90, 0.08, 0.62 + i * 0.08);
+  sweep(now, lines >= 3 ? 0.42 : 0.28);
+  const bursts = lines >= 3 ? 3 : lines;
+  for (let i = 0; i < bursts; i++) hit(now + 0.03 + i * 0.05, 280 + i * 110, 0.07, lines >= 3 ? 0.78 : 0.62);
 }
 
 export function playWin(enabled: boolean) {
