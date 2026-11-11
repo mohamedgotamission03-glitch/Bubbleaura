@@ -21,5 +21,5 @@ export default function AdPrivacyControls() {
       if(!updated)toast.info('Privacy choices could not be opened. Please try again.');
     } finally {setBusy(false);}
   }
-  return <Button variant="outline" className="secondary-button w-full" disabled={busy} onClick={openOptions}><ShieldCheck size={18}/>{busy?'Opening privacy choices…':'Ad privacy choices'}</Button>;
+  return <Button variant="outline" className="secondary-button w-full" disabled={busy} onClick={openOptions}><ShieldCheck size={18}/>{busy?'Opening privacy choices…':'Privacy choices'}</Button>;
 }

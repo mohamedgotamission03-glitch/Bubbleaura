@@ -41,10 +41,10 @@
 }
 
 @layer components {
-  .app-shell { min-height:100dvh;background:#e9def8;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom); }
+  .app-shell { min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#e9def8;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom); }
   .phone-game {
     --screen-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    --board-size:clamp(200px,min(280px,calc(100vw - 28px),calc(var(--screen-height) - 310px - max(50px,var(--ad-banner-height,50px)))),280px);
+    --board-size:clamp(200px,min(280px,calc(100vw - 28px),calc(var(--screen-height) - 250px)),280px);
     height:auto;max-height:var(--screen-height);background:var(--bloom-bg);
   }
   .game-header {height:50px;}
@@ -62,10 +62,17 @@
   .compact-goal:nth-child(2) {background:#dff7ef;color:#176e5c;}
   .compact-goal span {display:flex;gap:4px;align-items:center;}
   .compact-goal strong {font-size:12px;font-weight:900;}
-  .board-shell {width:var(--board-size);max-width:100%;margin:0 auto;padding:6px;background:#d5c6ed;border:1px solid #cbb8e5;border-radius:15px;}
+  .board-shell {position:relative;width:var(--board-size);max-width:100%;margin:0 auto;padding:6px;background:#d5c6ed;border:1px solid #cbb8e5;border-radius:15px;}
+  .board-shell.clearing {box-shadow:0 0 0 3px #fff,0 0 22px #c9a6ff;}
   .puzzle-board {display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:2px;aspect-ratio:1;}
   .board-cell {min-width:0;aspect-ratio:1;border:0;border-radius:5px;background:#ebe3f7;box-shadow:inset 0 1px 2px #c8b8dd;}
-  .puzzle-block,.board-cell.puzzle-block {opacity:1;border:0;border-radius:5px;box-shadow:inset 0 -3px 0 #00000025,inset 0 2px 0 #ffffff50;}
+  .puzzle-block,.board-cell.puzzle-block {opacity:1;border:0;border-radius:5px;box-shadow:inset 0 -4px 0 #0000002e,inset 0 3px 0 #ffffff73;}
+  .board-cell.clearing {z-index:1;animation:line-flash 460ms ease-out both;}
+  .combo-burst {position:absolute;inset:8px;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .combo-burst strong {color:#fff;font-size:clamp(18px,6.2vw,28px);font-weight:900;letter-spacing:-0.8px;white-space:nowrap;text-shadow:0 3px 0 #7c3aed,0 8px 16px #4b2e7155;animation:combo-pop 820ms ease-out both;}
+  .combo-burst span {margin-top:1px;color:#fff6c8;font-size:16px;font-weight:900;text-shadow:0 2px 0 #b07a12;animation:combo-pop 820ms ease-out both;}
+  .spark {position:absolute;width:8px;height:8px;border-radius:999px;animation:spark-out 760ms ease-out both;}
+  .spark-1{left:18%;top:30%;background:#ff4d94}.spark-2{left:78%;top:24%;background:#ffca35}.spark-3{left:24%;top:68%;background:#20d2b5}.spark-4{left:74%;top:70%;background:#8b3ff0}.spark-5{left:48%;top:18%;background:#fff}.spark-6{left:12%;top:48%;background:#368ff1}.spark-7{left:84%;top:48%;background:#ff9dc4}.spark-8{left:50%;top:78%;background:#ffe593}
   .board-cell.ghost {opacity:1;outline:2px dashed white;outline-offset:-3px;box-shadow:none;}
   .board-cell.ghost-invalid {background:#ffb2c6;outline:2px dashed #b5214e;outline-offset:-3px;}
   .placement-hint {height:16px;line-height:16px;}
@@ -96,6 +103,9 @@
   .ad-demo { @apply flex min-h-[240px] flex-col items-center justify-center rounded-2xl border border-dashed p-5 text-center; background:#faf7fe;border-color:#d7c3f0; }
 }
 @keyframes score-pop {from{transform:scale(1.04);}to{transform:scale(1);}}
+@keyframes line-flash {0%{filter:brightness(1);transform:scale(1);}35%{filter:brightness(1.6);transform:scale(1.08);}100%{filter:brightness(1.85);transform:scale(.72);opacity:.12;}}
+@keyframes combo-pop {0%{transform:scale(.72);opacity:0;}18%{transform:scale(1.08);opacity:1;}72%{transform:scale(1);opacity:1;}100%{transform:translateY(-10px) scale(.96);opacity:0;}}
+@keyframes spark-out {0%{transform:scale(.4);opacity:0;}25%{opacity:1;}100%{transform:scale(1.8) translateY(-18px);opacity:0;}}
 @media(min-width:600px) {
   .app-shell {display:flex;flex-direction:column;justify-content:center;align-items:center;}
   .phone-game {--screen-height:min(calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)),680px);border:1px solid #d9c8ef;border-radius:24px;overflow:hidden;box-shadow:0 12px 40px #49305c12;}

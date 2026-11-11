@@ -58,7 +58,7 @@ export function createStoreScenes(): Save[] {
   const opening = newGame();
   const clear = place(opening, 0, 7, 6)!;
   const games = [advance(opening, 5), clear, advance(newGame(3), 7), advance(newGame(), 9)];
-  return games.map(game => ({ game, unlocked: game.level, best: game.score, sound: true, haptics: true, completed: Array.from({length: game.level - 1}, (_, i) => i + 1), puzzlesCompleted: game.level - 1, lastInterstitialAt: 0 }));
+  return games.map(game => ({ game, unlocked: game.level, best: game.score, sound: true, music: true, haptics: true, completed: Array.from({length: game.level - 1}, (_, i) => i + 1), puzzlesCompleted: game.level - 1, lastInterstitialAt: 0 }));
 }
 
 export const SCREENSHOT_COPY = [
