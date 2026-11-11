@@ -49,7 +49,7 @@ export function stagePlace(game: Game, index: number, row: number, col: number):
   const final: Game = { ...game, board: clearedBoard, pieces: pieces.every(p => !p) ? makePieces() : pieces, score: game.score + piece.cells.length*10 + cleared*100 + Math.max(0,cleared-1)*50, lines: game.lines+cleared, moves: game.moves+1 };
   return { filled: cleared ? { ...game, board, pieces, moves: game.moves+1 } : final, final, rows, cols };
 }
-export const comboLabel = (lines: number) => lines >= 4 ? 'Unbelievable!' : lines === 3 ? 'Awesome!' : lines === 2 ? 'Great!' : 'Nice!';
+export const comboLabel = (lines: number) => lines >= 4 ? 'Unbelievable!' : lines === 3 ? 'Awesome!' : lines === 2 ? 'Great combo!' : 'Nice!';
 export const goal = (level: number) => ({score: 300 + level*150, lines: 2+Math.floor(level/3)});
 export const won = (game: Game) => game.score >= goal(game.level).score && game.lines >= goal(game.level).lines;
 export function revive(game: Game): Game {

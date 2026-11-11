@@ -41,8 +41,8 @@ export default function GameScreen({ save, disabled, undoAvailable, bump, onPlac
           <p key={bump} className={`score-number ${bump ? 'score-pop' : ''}`} aria-live="polite">{game.score.toLocaleString()}</p>
         </div>
         <div className="text-right">
-          <p className="flex items-center justify-end gap-1 text-[10px] font-extrabold text-[#71558f]"><Crown size={13} className="text-[#ad7510]"/> BEST</p>
-          <p className="text-base font-extrabold text-[#50326c]">{save.best.toLocaleString()}</p>
+          <p className="flex items-center justify-end gap-1 text-[10px] font-extrabold text-[#8a5a28]"><Crown size={13} className="text-[#ad7510]"/> BEST</p>
+          <p className="text-base font-extrabold text-[#3a2414]">{save.best.toLocaleString()}</p>
         </div>
       </div>
       <div className="compact-goals grid grid-cols-2 gap-2" aria-label="Level goals">

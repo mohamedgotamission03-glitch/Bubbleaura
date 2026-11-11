@@ -1,9 +1,4 @@
-// Original synthesized music and effects. No copied audio or samples.
-const PATTERN = [0, 4, 7, 12, 7, 4, 9, 12, 16, 12, 9, 7];
 let context: AudioContext | null = null;
-let musicTimer: number | null = null;
-let step = 0;
-let musicWanted = false;
 
 function audio(): AudioContext | null {
   if (context) return context;
@@ -12,97 +7,69 @@ function audio(): AudioContext | null {
   context = new Context();
   return context;
 }
-function tone(frequency: number, at: number, duration: number, volume: number, type: OscillatorType) {
+
+function hit(at: number, pitch: number, length: number, volume: number) {
   const ctx = audio();
   if (!ctx) return;
-  const oscillator = ctx.createOscillator();
-  const filter = ctx.createBiquadFilter();
-  const gain = ctx.createGain();
-  oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, at);
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(1700, at);
-  gain.gain.setValueAtTime(0.0001, at);
-  gain.gain.exponentialRampToValueAtTime(volume, at + Math.min(0.03, duration / 3));
-  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
-  oscillator.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-  oscillator.start(at);
-  oscillator.stop(at + duration + 0.03);
-}
-function sparkle(at: number, volume: number) {
-  const ctx = audio();
-  if (!ctx) return;
-  const frames = Math.floor(ctx.sampleRate * 0.14);
+  const frames = Math.max(1, Math.floor(ctx.sampleRate * length));
   const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
   const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / frames);
+  let noise = 0.17;
+  for (let i = 0; i < frames; i++) {
+    const t = i / ctx.sampleRate;
+    const punch = Math.exp(-t * 34);
+    const click = Math.exp(-t * 90);
+    noise = noise * 0.96 + (Math.random() * 2 - 1) * 0.04;
+    const body = Math.sin(2 * Math.PI * pitch * t * (1 + t * 1.4)) * punch;
+    data[i] = Math.max(-1, Math.min(1, body * 0.82 + noise * click * 1.6));
+  }
   const source = ctx.createBufferSource();
-  const filter = ctx.createBiquadFilter();
   const gain = ctx.createGain();
   source.buffer = buffer;
-  filter.type = 'highpass';
-  filter.frequency.value = 1600;
   gain.gain.setValueAtTime(volume, at);
-  gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.14);
-  source.connect(filter);
-  filter.connect(gain);
+  source.connect(gain);
   gain.connect(ctx.destination);
   source.start(at);
 }
-function tickMusic() {
+
+function ready(enabled: boolean) {
   const ctx = audio();
-  if (!ctx || !musicWanted) return;
-  const now = ctx.currentTime;
-  tone(261.63 * 2 ** (PATTERN[step % PATTERN.length] / 12), now, 0.46, 0.016, 'triangle');
-  if (step % 6 === 0) tone(130.81, now, 0.72, 0.01, 'sine');
-  step += 1;
+  if (!enabled || !ctx) return null;
+  if (ctx.state === 'suspended') void ctx.resume();
+  return ctx;
 }
+
 export async function unlockAudio() {
   const ctx = audio();
   if (ctx?.state === 'suspended') await ctx.resume();
 }
-export function setMusic(enabled: boolean) {
-  musicWanted = enabled;
-  if (!enabled) {
-    if (musicTimer !== null) window.clearInterval(musicTimer);
-    musicTimer = null;
-    return;
-  }
-  const ctx = audio();
-  if (!ctx || musicTimer !== null) return;
-  void ctx.resume();
-  tickMusic();
-  musicTimer = window.setInterval(tickMusic, 360);
-}
+
 export function playPlace(enabled: boolean) {
-  const ctx = audio();
-  if (!enabled || !ctx) return;
-  const now = ctx.currentTime;
-  tone(520, now, 0.09, 0.045, 'triangle');
-  tone(780, now + 0.03, 0.08, 0.02, 'sine');
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  hit(ctx.currentTime, 210, 0.07, 0.72);
 }
+
 export function playClear(enabled: boolean, lines: number) {
-  const ctx = audio();
-  if (!enabled || !ctx) return;
-  const notes = [523.25, 659.25, 783.99, 1046.5].slice(0, Math.min(4, lines + 1));
+  const ctx = ready(enabled);
+  if (!ctx) return;
   const now = ctx.currentTime;
-  notes.forEach((frequency, index) => tone(frequency, now + index * 0.07, 0.22, 0.05, 'triangle'));
-  if (lines > 1) sparkle(now + 0.08, Math.min(0.045, 0.018 * lines));
+  const bursts = Math.min(4, lines);
+  for (let i = 0; i < bursts; i++) hit(now + i * 0.045, 240 + i * 90, 0.08, 0.62 + i * 0.08);
 }
+
 export function playWin(enabled: boolean) {
-  const ctx = audio();
-  if (!enabled || !ctx) return;
-  [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => tone(frequency, ctx.currentTime + index * 0.11, 0.28, 0.05, 'triangle'));
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  [260, 340, 430].forEach((pitch, index) => hit(ctx.currentTime + index * 0.06, pitch, 0.09, 0.7));
 }
+
 export function playUndo(enabled: boolean) {
-  const ctx = audio();
-  if (!enabled || !ctx) return;
-  tone(440, ctx.currentTime, 0.08, 0.03, 'sine');
-  tone(330, ctx.currentTime + 0.05, 0.1, 0.025, 'triangle');
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  hit(ctx.currentTime, 150, 0.06, 0.45);
 }
+
 export function stopAudio() {
-  setMusic(false);
   if (context?.state === 'running') void context.suspend();
 }

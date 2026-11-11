@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.cubellio4fun.blockpuzzle',
   appName: 'Cubellio',
   webDir: 'dist',
-  android: { backgroundColor: '#f5f0ff' },
+  android: { backgroundColor: '#fff8ee' },
 };
 
 export default config;
