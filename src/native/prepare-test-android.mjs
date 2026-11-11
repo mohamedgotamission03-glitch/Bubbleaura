@@ -15,7 +15,7 @@ if (!process.argv.includes('--config-only') && existsSync(manifestPath)) {
   if (!manifest.includes(`android:value="${ids.appId}"`)) throw new Error('AdMob test app ID is missing from AndroidManifest.xml. The Android sync hook must complete first.');
   let foundMainActivity = false;
   manifest = manifest.replace(/<activity\b[^>]*>/g, activity => {
-    if (!/android:name=["'](?:\.MainActivity|com\.blockbloom\.game\.MainActivity)["']/.test(activity)) return activity;
+    if (!/android:name=["'](?:\.MainActivity|com\.cubellio4fun\.blockpuzzle\.MainActivity)["']/.test(activity)) return activity;
     foundMainActivity = true;
     if (/android:screenOrientation=["'][^"']*["']/.test(activity)) return activity.replace(/android:screenOrientation=["'][^"']*["']/, 'android:screenOrientation="portrait"');
     return activity.replace(/>$/, ' android:screenOrientation="portrait">');

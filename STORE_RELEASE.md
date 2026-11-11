@@ -13,7 +13,9 @@
 
 Use `.github/workflows/android-store-release.yml`, named **Build Android store release**.
 
-A store update must use the correct existing signing identity. If this is an existing published app, use its upload/signing key and its registered package ID. The current package ID is `com.blockbloom.game`; do not change it after publishing. An AdMob app ID is not an Android package ID.
+A store update must use the correct existing signing identity. If this is an existing published app, use its upload/signing key and its registered package ID. The current package ID is `com.cubellio4fun.blockpuzzle`; do not change it after publishing. An AdMob app ID is not an Android package ID.
+
+Build a new APK/AAB after this package change. Older artifacts with `com.blockbloom.game` cannot update this app; Android treats the new package as a separate installation with separate device-local progress. Existing keystore filenames, key aliases and GitHub signing secrets do not need to be renamed. Link the correct package/store listing in AdMob when available.
 
 For a new app, create and securely back up a release/upload keystore using Android Studio's **Build → Generate Signed Bundle / APK** wizard. Keep the keystore and passwords private; do not paste them in chat or commit them to the repository. Google Play upload keys and Galaxy Store distribution signing can differ: do not assume APKs from the two stores can update each other automatically.
 
