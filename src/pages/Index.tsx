@@ -70,7 +70,7 @@ const Index = () => {
       return;
     }
     const lines=staged.rows.length+staged.cols.length;
-    const cheer=won(staged.final)?'You did it!':cheerFor(lines);
+    const cheer=cheerFor(lines,won(staged.final));
     pendingFinal.current=staged.final; burstingRef.current=true; setClearing(true);
     setCombo({id:Date.now(),label:cheer,points:gained,lines,rows:staged.rows,cols:staged.cols});
     setSave(prev=>({...prev,game:staged.filled}));

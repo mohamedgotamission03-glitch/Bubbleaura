@@ -55,46 +55,39 @@ function sparkle(at: number, volume: number) {
   source.start(at);
 }
 
-const CHEERS = ['Nice!', 'Good job!', 'Yes!', 'Sweet!'];
-const BIG = ['Awesome!', 'Great!', 'So good!'];
-const HUGE = ['Perfect!', 'Incredible!', 'Brilliant!'];
+const VOICE = "https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/Voiceover%20Pack/Audio%20(Female)/";
+const SMALL = [{ phrase: 'Correct!', file: 'correct.ogg', rate: 0.96 }, { phrase: 'Ready!', file: 'ready.ogg', rate: 1 }];
+const MID = [{ phrase: 'Power up!', file: 'power_up.ogg', rate: 1.02 }, { phrase: 'Level up!', file: 'level_up.ogg', rate: 1.05 }];
+const BIG = [{ phrase: 'Congratulations!', file: 'congratulations.ogg', rate: 1.04 }, { phrase: 'New high score!', file: 'new_highscore.ogg', rate: 1.08 }];
+const WIN = [{ phrase: 'You win!', file: 'you_win.ogg', rate: 1 }, { phrase: 'Mission completed!', file: 'mission_completed.ogg', rate: 1.03 }];
+const CLIPS = [...SMALL, ...MID, ...BIG, ...WIN];
 let cheerIndex = 0;
+let voice: HTMLAudioElement | null = null;
 
-export function cheerFor(lines: number) {
-  const bank = lines >= 3 ? HUGE : lines === 2 ? BIG : CHEERS;
-  const phrase = bank[cheerIndex % bank.length];
+export function cheerFor(lines: number, win = false) {
+  const bank = win ? WIN : lines >= 3 ? BIG : lines === 2 ? MID : SMALL;
+  const phrase = bank[cheerIndex % bank.length].phrase;
   cheerIndex += 1;
   return phrase;
 }
 
-function voiceFor(synth: SpeechSynthesis) {
-  const voices = synth.getVoices();
-  return voices.find(voice => /en[-_]US/i.test(voice.lang) && /google|samantha|female|natural/i.test(voice.name))
-    || voices.find(voice => /en[-_]US/i.test(voice.lang))
-    || voices.find(voice => /^en/i.test(voice.lang))
-    || null;
-}
-
 export function playCheer(enabled: boolean, phrase: string) {
-  if (!enabled || !phrase || typeof window === 'undefined' || !window.speechSynthesis) return;
-  try {
-    const synth = window.speechSynthesis;
-    const utter = new SpeechSynthesisUtterance(phrase);
-    const voice = voiceFor(synth);
-    synth.cancel();
-    utter.lang = 'en-US';
-    utter.rate = 1.08;
-    utter.pitch = 1.22;
-    utter.volume = 1;
-    if (voice) utter.voice = voice;
-    synth.speak(utter);
-  } catch { /* Some WebViews have no speech voice. The chime still plays. */ }
+  if (!enabled || !phrase) return;
+  const clip = CLIPS.find(item => item.phrase === phrase);
+  if (!clip) return;
+  voice?.pause();
+  const next = new Audio(`${VOICE}${clip.file}`);
+  next.preload = 'auto';
+  next.playbackRate = clip.rate;
+  next.volume = 1;
+  voice = next;
+  void next.play().catch(() => {});
 }
 
 export async function unlockAudio() {
   const ctx = audio();
   if (ctx?.state === 'suspended') await ctx.resume();
-  window.speechSynthesis?.getVoices();
+  CLIPS.forEach(clip => { const warm = new Audio(`${VOICE}${clip.file}`); warm.preload = 'auto'; });
 }
 
 export function playPlace(enabled: boolean) {
@@ -134,5 +127,5 @@ export function playUndo(enabled: boolean) {
 
 export function stopAudio() {
   if (context?.state === 'running') void context.suspend();
-  window.speechSynthesis?.cancel();
+  if (voice) { voice.pause(); voice = null; }
 }
