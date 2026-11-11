@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { ArrowRight, Check, Heart, LockKeyhole, Map, Pause, Play, RotateCcw, Star, Volume2, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -102,6 +104,7 @@ const Index = () => {
       onRestart={()=>setModal('restart')}
       onUndo={()=>{if(undo){setSave(prev=>({...prev,game:undo}));setUndo(null);}}}
     />
+    {Capacitor.getPlatform()==='web'&&<div className="mx-auto flex justify-center py-2"><Link to="/store-assets" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-xs font-bold text-purple-700 hover:bg-purple-100">Store launch kit <ArrowRight size={14}/></Link></div>}
     {storageWarning&&<p className="mx-auto max-w-[400px] px-4 py-2 text-center text-xs text-amber-700">Device storage is unavailable. Progress will last only for this session.</p>}
     <Dialog open={Boolean(modal)} onOpenChange={open=>{if(!open&&!busy){if(modal==='win'||modal==='over')setModal('pause');else setModal(null);}}}>
       <DialogContent className="bloom-dialog max-h-[90dvh] overflow-y-auto rounded-[28px] border-0 p-7 sm:max-w-[430px]" onEscapeKeyDown={e=>{if(busy)e.preventDefault();}} onPointerDownOutside={e=>{if(busy)e.preventDefault();}}>
