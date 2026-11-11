@@ -3,25 +3,30 @@ import LegalDocument from '@/components/LegalDocument';
 
 export default function PrivacyPolicy() {
   return <LegalDocument title="Privacy Policy" updated="11 November 2026">
-    <p>This policy explains how Cubellio, published by cubellio4fun, handles information when you play the Android game Cubellio (package name <strong>com.cubellio4fun.blockpuzzle</strong>). Cubellio does not ask you to create an account.</p>
-    <h2>Information stored on your device</h2>
-    <p>The game saves your progress, unlocked levels, best score, and sound and vibration preferences locally on your device. That information stays on the device. Uninstalling the app or clearing its storage deletes it. Cubellio does not upload that saved game progress to a developer server.</p>
-    <h2>Advertising and consent</h2>
-    <p>Cubellio uses Google AdMob and Google’s User Messaging Platform. These services may process device and advertising information, such as an advertising identifier, IP address, and device details, to request ads, measure them, and show a consent or privacy-options form where required. The current game screen does not display a banner, but an interstitial ad may appear between completed puzzles, and you may choose to watch a rewarded video after a game ends. A rewarded video grants one revive only when the ad service confirms the reward. Ads need an internet connection and may be unavailable.</p>
-    <p>Google’s handling of advertising information is described in the <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google Privacy Policy</a>. You can change eligible ad privacy choices from Cubellio’s settings when the consent tool requires that option.</p>
-    <h2>What this app does not do</h2>
-    <ul>
-      <li>It does not require a Cubellio account, and it does not ask for your name, email, or precise location.</li>
-      <li>The developer does not sell your personal information.</li>
-      <li>The game is a general-audience puzzle and is not directed to children under 13. It is not claimed to be a Google Play Families app.</li>
-    </ul>
-    <h2>Security and retention</h2>
-    <p>Local progress is protected by your device. Advertising requests are handled by Google’s services. Local game data remains until you clear it or remove the app. Advertising data is retained according to Google’s own policies.</p>
+    <p>This Privacy Policy explains how <strong>Cubellio</strong>, published by <strong>cubellio4fun</strong>, accesses, collects, uses, handles, and shares information. It applies to the Android game Cubellio, package name <strong>com.cubellio4fun.blockpuzzle</strong>. The developer name in the Google Play listing is cubellio4fun.</p>
+    <h2>Privacy contact</h2>
+    <p>The privacy point of contact is the support email published on the Cubellio Google Play listing. No separate email address, postal address, or company registration number was supplied for this policy, so none is stated here. Please use that Play listing email for privacy inquiries.</p>
+    <h2>Accounts</h2>
+    <p>Cubellio does not let you create an account, sign in, or submit a profile. Because there is no app account, there is no account to freeze or delete. You can delete the game data stored by Cubellio by clearing the app’s storage or uninstalling it. That deletion removes the local progress, best score, and settings saved by the game.</p>
+    <h2>Information stored only on your device</h2>
+    <p>The game stores the current puzzle, score, cleared lines, unlocked levels, completed levels, best score, sound preference, and vibration preference in local app storage on your device. cubellio4fun does not receive, upload, or operate a server for that saved game progress. It remains until you clear the app storage or uninstall Cubellio, or until the device cannot save it.</p>
+    <h2>Information accessed or processed for advertising</h2>
+    <p>Cubellio includes the Google AdMob advertising SDK and Google’s User Messaging Platform consent SDK. When the app requests an ad or checks consent, Google may process device and advertising information, which can include an advertising identifier, IP address, device and app information, ad interactions, and diagnostic information. Google may infer approximate location from an IP address. Cubellio does not request the device location permission and does not collect precise GPS location.</p>
+    <p>The current play screen does not display a banner. An interstitial ad may be requested between completed puzzles. After a game ends, you may choose to watch a rewarded video. A revive is granted only when Google’s SDK confirms that the reward was earned and the video has been dismissed. Advertising requires an internet connection and may be unavailable. If no ad is available, you can restart normally.</p>
+    <p>Those advertising requests are used to show, measure, and limit ads, to check whether ads may be requested, and to present a consent or privacy-options form where required. They are not used by cubellio4fun to build a player account.</p>
+    <h2>Parties data is shared with</h2>
+    <p>Saved game progress is not shared by cubellio4fun with anyone. Advertising and consent information is processed by Google through AdMob and the User Messaging Platform. Google’s practices are described in the <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google Privacy Policy</a>. cubellio4fun does not independently sell personal or sensitive user data. “Sell” means exchanging that data with a third party for money. The developer requires advertising providers not to sell personal or sensitive user data collected from Cubellio.</p>
+    <h2>Identifiers the app does not use</h2>
+    <p>Cubellio does not collect or link persistent device identifiers such as IMEI, IMSI, or SIM serial number to personal data or to a resettable advertising identifier. The app itself does not use Android App Set ID for advertising, measurement, analytics, or fraud prevention. It does not access contacts, photos, microphone, camera, SMS, call logs, health data, financial information, government ID numbers, or an inventory of other installed apps.</p>
+    <h2>Security</h2>
+    <p>Local game data stays in the app’s private device storage. Advertising and consent communications made by the included Google SDKs are sent using modern encrypted connections, such as HTTPS. No security method can be guaranteed against every risk.</p>
+    <h2>Retention and deletion</h2>
+    <p>Local puzzle data and settings are kept until you clear Cubellio’s storage or uninstall the app. cubellio4fun does not keep a separate server copy of that progress. Information processed by Google for advertising or consent is retained by Google under Google’s own retention rules. There is no Cubellio account whose data can be frozen instead of deleted.</p>
     <h2>Your choices</h2>
-    <p>You can turn sound effects and vibration off in the game. You can refuse or withdraw available ad consent through the privacy choices shown by the consent tool. You can also limit ad personalization in your device settings. Some of those choices may reduce ad availability, but the puzzle can still be restarted normally.</p>
-    <h2>Contact</h2>
-    <p>For privacy questions, use the support email published on the Cubellio Google Play listing. No separate developer email, postal address, or company registration number has been supplied for this page, so none is invented here. See also the <Link to="/terms">Terms of Use</Link>.</p>
+    <p>Where Google’s consent form is required, Cubellio presents it before requesting ads. Accepting or refusing that form requires an affirmative choice. Closing the app is not treated as consent. When Google requires a privacy-options entry point, Settings includes a control that opens it. You can also limit ad personalization in your device settings. Sound effects and vibration can be turned off in Settings. These choices may reduce ad availability but do not block normal puzzle play.</p>
+    <h2>Children</h2>
+    <p>Cubellio is a general-audience puzzle game. It is not directed to children under 13, and it is not presented as a Google Play Families app.</p>
     <h2>Changes</h2>
-    <p>If this policy changes, the updated date above will change and the new version will be published at this page.</p>
+    <p>If this policy changes, the “Last updated” date will change and the replacement policy will be published at this same public page. The policy inside the app is intended to match the public page. See also the <Link to="/terms">Terms of Use</Link>.</p>
   </LegalDocument>;
 }
