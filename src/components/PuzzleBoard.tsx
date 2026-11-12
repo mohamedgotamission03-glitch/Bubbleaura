@@ -13,8 +13,6 @@ export function PieceShape({piece}: {piece:Piece}) {
   })}</span>;
 }
 export default function PuzzleBoard({board,pieces,onPlace,disabled,highlightRows=[],highlightCols=[],combo=null}: Props) {
-  const almostRows = board.flatMap((row,r)=>row.filter(Boolean).length===SIZE-1?[r]:[]);
-  const almostCols = Array.from({length:SIZE},(_,c)=>board.filter(row=>row[c]).length===SIZE-1?[c]:[]).flat();
   const boardRef = useRef<HTMLDivElement>(null);
   const start = useRef({x:0,y:0});
   const moved = useRef(false);
@@ -41,9 +39,8 @@ export default function PuzzleBoard({board,pieces,onPlace,disabled,highlightRows
         {board.flatMap((row,r)=>row.map((cell,c)=> {
           const ghost=piece && preview && piece.cells.some(([pr,pc])=>pr+preview.row===r&&pc+preview.col===c);
           const clearing=(highlightRows.includes(r)||highlightCols.includes(c)) && Boolean(cell);
-          const almost=!cell&&!ghost&&(almostRows.includes(r)||almostCols.includes(c));
           const color=cell?BLOCK_COLORS[cell]:ghost&&valid?BLOCK_COLORS[piece!.color]:ghost?'#ffb2c6':undefined;
-          return <button key={`${r}-${c}`} disabled={disabled} style={color?{backgroundColor:color,opacity:1}:undefined} aria-label={`Row ${r+1}, column ${c+1}, ${cell ? `${cell} block` : 'empty'}`} onPointerEnter={()=>{if(piece&&!dragging)setPreview({row:r,col:c});}} onFocus={()=>{if(piece)setPreview({row:r,col:c});}} onClick={()=>{if(selected!==null)drop(selected,r,c);}} className={`board-cell ${cell ? 'puzzle-block' : ''} ${ghost&&!cell ? valid ? 'ghost' : 'ghost-invalid' : ''} ${clearing ? 'clearing' : ''} ${almost ? 'almost' : ''}`} />;
+          return <button key={`${r}-${c}`} disabled={disabled} style={color?{backgroundColor:color,opacity:1}:undefined} aria-label={`Row ${r+1}, column ${c+1}, ${cell ? `${cell} block` : 'empty'}`} onPointerEnter={()=>{if(piece&&!dragging)setPreview({row:r,col:c});}} onFocus={()=>{if(piece)setPreview({row:r,col:c});}} onClick={()=>{if(selected!==null)drop(selected,r,c);}} className={`board-cell ${cell ? 'puzzle-block' : ''} ${ghost&&!cell ? valid ? 'ghost' : 'ghost-invalid' : ''} ${clearing ? 'clearing' : ''}`} />;
         }))}
       </div>
       {highlightRows.map((row,index)=><div key={`row-${row}`} className="line-beam" style={{top:`calc(8px + ${row} * (100% - 16px) / 8)`,height:'calc((100% - 16px) / 8)'}}>{index===0&&<span>+{combo?.points??0}</span>}</div>)}

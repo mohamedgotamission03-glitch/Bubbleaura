@@ -64,7 +64,6 @@
   .compact-goal strong {font-size:12px;font-weight:900;}
   .board-shell {position:relative;width:var(--board-size);max-width:100%;margin:0 auto;padding:8px;background:#2d3b86;border:2px solid #24336f;border-radius:16px;box-shadow:inset 0 0 0 1px #6d7de0;}
   .board-shell.clearing {box-shadow:0 0 0 2px #8ecbff;}
-  .board-cell.almost {box-shadow:inset 0 0 0 2px #ffe27a;}
   .puzzle-board {display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:2px;aspect-ratio:1;}
   .board-cell {min-width:0;aspect-ratio:1;border:0;border-radius:5px;background:#3a488f;box-shadow:inset 0 1px 1px #2a3470;}
   .puzzle-block,.board-cell.puzzle-block {opacity:1;border:0;border-radius:5px;box-shadow:inset 0 -4px 0 #0000002e,inset 0 3px 0 #ffffff73;}
