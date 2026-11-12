@@ -56,12 +56,6 @@ function sparkle(at: number, volume: number) {
 }
 
 const PHRASES = ['Interesting!', 'Doing good!', 'Excellent!', 'Perfect!'] as const;
-const TONE: Record<string, { pitch: number; rate: number }> = {
-  'Interesting!': { pitch: 1.02, rate: 0.96 },
-  'Doing good!': { pitch: 1.16, rate: 1.02 },
-  'Excellent!': { pitch: 1.28, rate: 1.06 },
-  'Perfect!': { pitch: 1.42, rate: 1.12 },
-};
 let cheerIndex = 0;
 
 export function cheerFor(_lines = 1, win = false, _streak = 1) {
@@ -71,28 +65,9 @@ export function cheerFor(_lines = 1, win = false, _streak = 1) {
   return phrase;
 }
 
-export function playCheer(enabled: boolean, phrase: string, energy = 1) {
-  if (!enabled || !phrase || typeof window === 'undefined' || !window.speechSynthesis) return;
-  const tone = TONE[phrase] ?? { pitch: 1.1, rate: 1 };
-  try {
-    const synth = window.speechSynthesis;
-    const utter = new SpeechSynthesisUtterance(phrase);
-    const voices = synth.getVoices();
-    const spoken = voices.find(item => /en/i.test(item.lang) && /female|samantha|natural|google/i.test(item.name)) || voices.find(item => /en/i.test(item.lang));
-    synth.cancel();
-    utter.lang = 'en-US';
-    utter.pitch = Math.min(2, tone.pitch + (energy - 1));
-    utter.rate = Math.min(1.4, tone.rate + (energy - 1) * 0.2);
-    utter.volume = 1;
-    if (spoken) utter.voice = spoken;
-    synth.speak(utter);
-  } catch { /* The popup still shows the word. */ }
-}
-
 export async function unlockAudio() {
   const ctx = audio();
   if (ctx?.state === 'suspended') await ctx.resume();
-  window.speechSynthesis?.getVoices();
 }
 
 export function playPlace(enabled: boolean) {
@@ -132,5 +107,4 @@ export function playUndo(enabled: boolean) {
 
 export function stopAudio() {
   if (context?.state === 'running') void context.suspend();
-  window.speechSynthesis?.cancel();
 }
