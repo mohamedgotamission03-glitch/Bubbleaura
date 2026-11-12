@@ -55,11 +55,11 @@ function sparkle(at: number, volume: number) {
   source.start(at);
 }
 
-const PHRASES = ['Interesting!', 'Doing good!', 'Excellent!', 'Perfect!'] as const;
+const PHRASES = ['Nice!', 'Good job!', 'Doing good!', 'Yes!', 'Awesome!', 'Excellent!', 'Great!', 'Perfect!', 'Sweet!', 'Brilliant!', 'Interesting!', 'Incredible!'];
 let cheerIndex = 0;
 
 export function cheerFor(_lines = 1, win = false, _streak = 1) {
-  if (win) return 'Perfect!';
+  if (win) return 'You did it!';
   const phrase = PHRASES[cheerIndex % PHRASES.length];
   cheerIndex += 1;
   return phrase;
