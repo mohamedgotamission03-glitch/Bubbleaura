@@ -16,10 +16,11 @@ type Props = {
   onUndo: () => void;
   onRestart: () => void;
   clearing?: boolean;
+  heat?: number;
   combo?: { id: number; label: string; points: number; lines?: number; rows: number[]; cols: number[]; streak?: number } | null;
 };
 
-export default function GameScreen({ save, disabled, undoAvailable, bump, onPlace, onLevels, onSettings, onHelp, onPause, onUndo, onRestart, clearing=false, combo=null }: Props) {
+export default function GameScreen({ save, disabled, undoAvailable, bump, onPlace, onLevels, onSettings, onHelp, onPause, onUndo, onRestart, clearing=false, heat=0, combo=null }: Props) {
   const { game } = save;
   const target = goal(game.level);
   return <div className="phone-game mx-auto flex w-full max-w-[360px] flex-col">
@@ -49,7 +50,8 @@ export default function GameScreen({ save, disabled, undoAvailable, bump, onPlac
         <div className="compact-goal"><Star size={16} className="text-[#945017]"/><span>Points <strong>{Math.min(game.score,target.score)} / {target.score}</strong></span></div>
         <div className="compact-goal"><Layers3 size={16} className="text-[#087d70]"/><span>Lines <strong>{Math.min(game.lines,target.lines)} / {target.lines}</strong></span></div>
       </div>
-      <PuzzleBoard board={game.board} pieces={game.pieces} onPlace={onPlace} disabled={disabled||clearing} highlightRows={combo?.rows} highlightCols={combo?.cols} combo={combo}/>
+      {heat>=2&&<div className={`heat-pill heat-${Math.min(heat,5)}`} aria-live="polite">Combo {heat}</div>}
+      <PuzzleBoard board={game.board} pieces={game.pieces} onPlace={onPlace} disabled={disabled||clearing} highlightRows={combo?.rows} highlightCols={combo?.cols} combo={combo} snap={bump}/>
       <div className="game-tools grid grid-cols-3 gap-2">
         <Button variant="ghost" className="tool-button" disabled={!undoAvailable||disabled} onClick={onUndo}><Undo2 size={18}/><span>Undo</span></Button>
         <Button variant="ghost" className="tool-button" onClick={onPause}><Pause size={17} fill="currentColor"/><span>Pause</span></Button>

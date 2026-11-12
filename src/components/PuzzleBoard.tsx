@@ -3,7 +3,7 @@ import { Board, fits, Piece, SIZE } from '@/lib/puzzle';
 import { BLOCK_COLORS } from '@/lib/block-colors';
 import { MousePointer2 } from 'lucide-react';
 
-type Props = { board: Board; pieces: (Piece | null)[]; onPlace: (index:number,row:number,col:number)=>void; disabled: boolean; highlightRows?: number[]; highlightCols?: number[]; combo?: { id: number; label: string; points: number; lines?: number; streak?: number } | null };
+type Props = { board: Board; pieces: (Piece | null)[]; onPlace: (index:number,row:number,col:number)=>void; disabled: boolean; highlightRows?: number[]; highlightCols?: number[]; combo?: { id: number; label: string; points: number; lines?: number; streak?: number } | null; snap?: number };
 export function PieceShape({piece}: {piece:Piece}) {
   const height = Math.max(...piece.cells.map(c=>c[0]))+1;
   const width = Math.max(...piece.cells.map(c=>c[1]))+1;
@@ -12,7 +12,9 @@ export function PieceShape({piece}: {piece:Piece}) {
     return <span key={i} className={filled?'puzzle-block':'invisible'} style={filled?{backgroundColor:BLOCK_COLORS[piece.color],opacity:1}:undefined}/>;
   })}</span>;
 }
-export default function PuzzleBoard({board,pieces,onPlace,disabled,highlightRows=[],highlightCols=[],combo=null}: Props) {
+export default function PuzzleBoard({board,pieces,onPlace,disabled,highlightRows=[],highlightCols=[],combo=null,snap=0}: Props) {
+  const almostRows = board.flatMap((row,r)=>row.filter(Boolean).length===SIZE-1?[r]:[]);
+  const almostCols = Array.from({length:SIZE},(_,c)=>board.filter(row=>row[c]).length===SIZE-1?[c]:[]).flat();
   const boardRef = useRef<HTMLDivElement>(null);
   const start = useRef({x:0,y:0});
   const moved = useRef(false);
@@ -34,18 +36,20 @@ export default function PuzzleBoard({board,pieces,onPlace,disabled,highlightRows
     }
   }
   return <>
-    <div className={`board-shell ${highlightRows.length || highlightCols.length ? 'clearing' : ''}`}>
+    <div className={`board-shell ${highlightRows.length || highlightCols.length ? 'clearing' : ''} ${(combo?.streak??0)>=4?'heat-board':''}`}>
       <div ref={boardRef} className="puzzle-board" aria-label="8 by 8 puzzle board" onPointerLeave={()=>{if(!dragging)setPreview(null);}}>
         {board.flatMap((row,r)=>row.map((cell,c)=> {
           const ghost=piece && preview && piece.cells.some(([pr,pc])=>pr+preview.row===r&&pc+preview.col===c);
           const clearing=(highlightRows.includes(r)||highlightCols.includes(c)) && Boolean(cell);
+          const almost=!cell&&!ghost&&(almostRows.includes(r)||almostCols.includes(c));
           const color=cell?BLOCK_COLORS[cell]:ghost&&valid?BLOCK_COLORS[piece!.color]:ghost?'#ffb2c6':undefined;
-          return <button key={`${r}-${c}`} disabled={disabled} style={color?{backgroundColor:color,opacity:1}:undefined} aria-label={`Row ${r+1}, column ${c+1}, ${cell ? `${cell} block` : 'empty'}`} onPointerEnter={()=>{if(piece&&!dragging)setPreview({row:r,col:c});}} onFocus={()=>{if(piece)setPreview({row:r,col:c});}} onClick={()=>{if(selected!==null)drop(selected,r,c);}} className={`board-cell ${cell ? 'puzzle-block' : ''} ${ghost&&!cell ? valid ? 'ghost' : 'ghost-invalid' : ''} ${clearing ? 'clearing' : ''}`} />;
+          return <button key={`${r}-${c}`} disabled={disabled} style={color?{backgroundColor:color,opacity:1}:undefined} aria-label={`Row ${r+1}, column ${c+1}, ${cell ? `${cell} block` : 'empty'}`} onPointerEnter={()=>{if(piece&&!dragging)setPreview({row:r,col:c});}} onFocus={()=>{if(piece)setPreview({row:r,col:c});}} onClick={()=>{if(selected!==null)drop(selected,r,c);}} className={`board-cell ${cell ? 'puzzle-block' : ''} ${ghost&&!cell ? valid ? 'ghost' : 'ghost-invalid' : ''} ${clearing ? 'clearing' : ''} ${almost ? 'almost' : ''}`} />;
         }))}
       </div>
       {highlightRows.map((row,index)=><div key={`row-${row}`} className="line-beam" style={{top:`${row*12.5}%`}}>{index===0&&<span>+{combo?.points??0}</span>}</div>)}
       {highlightCols.map(col=><div key={`col-${col}`} className="line-beam column-beam" style={{left:`${col*12.5}%`}}/>)}
-      {combo?.label&&<div key={combo.id} className={`combo-burst combo-tone-${Math.min(combo.lines??1,4)} ${(combo.streak??0)>=2?'is-combo':''}`} aria-live="polite">{(combo.streak??0)>=2&&<b className="combo-tag">Combo {combo.streak}</b>}<strong>{combo.label}</strong>{(combo.streak??0)>=2&&<em className="perfect-glow" aria-hidden="true"/>}{[1,2,3,4,5,6,7,8,9,10].map(spark=><i key={spark} className={`spark spark-${spark}`}/>)}</div>}
+      {snap>0&&<div key={snap} className="board-snap" aria-hidden="true"/>}
+      {combo?.label&&<div key={combo.id} className={`combo-burst combo-tone-${Math.min(combo.streak??combo.lines??1,4)} is-combo`} aria-live="polite"><b className="combo-tag">Combo {combo.streak}</b><strong>{combo.label}</strong>{(combo.streak??0)>=3&&<em className="perfect-glow" aria-hidden="true"/>}{[1,2,3,4,5,6,7,8,9,10].map(spark=><i key={spark} className={`spark spark-${spark}`}/>)}</div>}
     </div>
     <p className="placement-hint flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#e7ecff]" aria-live="polite"><MousePointer2 size={12}/>{piece ? 'Now tap the board to place your block' : 'Drag a block, or tap it then tap the board'}</p>
     <div className="piece-tray">

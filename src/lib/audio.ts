@@ -55,12 +55,17 @@ function sparkle(at: number, volume: number) {
   source.start(at);
 }
 
-const PHRASES = ['Nice!', 'Good job!', 'Doing good!', 'Yes!', 'Awesome!', 'Excellent!', 'Great!', 'Perfect!', 'Sweet!', 'Brilliant!', 'Interesting!', 'Incredible!'];
+const SOFT = ['Nice!', 'Good job!', 'Yes!'];
+const WARM = ['Awesome!', 'Great!', 'Doing good!'];
+const PEAK = ['Perfect!', 'Excellent!', 'Incredible!'];
 let cheerIndex = 0;
 
-export function cheerFor(_lines = 1, win = false, _streak = 1) {
+export function cheerFor(lines = 1, win = false, streak = 1) {
   if (win) return 'You did it!';
-  const phrase = PHRASES[cheerIndex % PHRASES.length];
+  const heat = Math.max(streak, lines);
+  if (heat < 2) return '';
+  const bank = heat >= 4 || lines >= 3 ? PEAK : heat >= 3 ? WARM : SOFT;
+  const phrase = bank[cheerIndex % bank.length];
   cheerIndex += 1;
   return phrase;
 }
@@ -73,23 +78,21 @@ export async function unlockAudio() {
 export function playPlace(enabled: boolean) {
   const ctx = ready(enabled);
   if (!ctx) return;
-  const notes = [523, 659, 784, 880];
-  const note = notes[Math.floor(Math.random() * notes.length)];
-  tone(ctx.currentTime, note, 0.11, 0.22, 'triangle', note * 1.02);
-  tone(ctx.currentTime + 0.07, note * 1.5, 0.09, 0.12, 'sine');
-  sparkle(ctx.currentTime, 0.08);
+  tone(ctx.currentTime, 620, 0.07, 0.2, 'triangle', 780);
 }
 
-export function playClear(enabled: boolean, lines: number) {
+export function playClear(enabled: boolean, lines: number, streak = 1) {
   const ctx = ready(enabled);
   if (!ctx) return;
   const now = ctx.currentTime;
-  const notes = lines >= 3 ? [523, 659, 784, 1046] : lines === 2 ? [523, 659, 784] : [659, 880];
-  notes.forEach((note, index) => {
-    tone(now + index * 0.07, note, 0.16, lines >= 3 ? 0.24 : 0.2, 'triangle', note * 1.04);
-    tone(now + index * 0.07, note * 2, 0.1, 0.06, 'sine');
-  });
-  sparkle(now + 0.04, lines >= 3 ? 0.2 : 0.12);
+  const step = Math.min(streak + lines - 1, 6);
+  const base = 494 * Math.pow(1.06, step);
+  const count = Math.min(1 + lines, 4);
+  for (let i = 0; i < count; i++) {
+    const note = base * Math.pow(1.2, i);
+    tone(now + i * 0.055, note, 0.13, 0.16 + step * 0.01, 'triangle', note * 1.03);
+  }
+  sparkle(now, 0.08 + step * 0.015);
 }
 
 export function playWin(enabled: boolean) {

@@ -24,6 +24,7 @@ const Index = () => {
   const [storageWarning,setStorageWarning] = useState(false);
   const [clearing,setClearing] = useState(false);
   const [combo,setCombo] = useState<{id:number;label:string;points:number;lines:number;rows:number[];cols:number[];streak:number}|null>(null);
+  const [heat,setHeat] = useState(0);
   const timers = useRef<number[]>([]);
   const pendingFinal = useRef<Game|null>(null);
   const burstingRef = useRef(false);
@@ -67,7 +68,7 @@ const Index = () => {
     if(!staged.rows.length&&!staged.cols.length){
       pendingFinal.current=null;
       setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
-      streak.current=0;
+      streak.current=0; setHeat(0);
       playPlace(prefs.current.sound); if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(12); setBump(n=>n+1);
       return;
     }
@@ -75,11 +76,13 @@ const Index = () => {
     streak.current+=1;
     const cheer=cheerFor(lines,won(staged.final),streak.current);
     pendingFinal.current=staged.final; burstingRef.current=true; setClearing(true);
-    setCombo({id:Date.now(),label:cheer,points:gained,lines,rows:staged.rows,cols:staged.cols,streak:Math.max(streak.current,lines)});
+    const shown=Math.max(streak.current,lines);
+    setHeat(shown);
+    setCombo({id:Date.now(),label:cheer,points:gained,lines,rows:staged.rows,cols:staged.cols,streak:shown});
     setSave(prev=>({...prev,game:staged.filled}));
     if(won(staged.final)){celebrated.current=true;playWin(prefs.current.sound);}
-    else playClear(prefs.current.sound,lines);
-    if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(lines>1?[16,24,16,28]:[18,26,18]);
+    else playClear(prefs.current.sound,lines,shown);
+    if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(shown>=4?[22,28,18,36]:lines>1?[16,24,16,28]:[18,26,18]);
     timers.current.push(window.setTimeout(()=>{
       pendingFinal.current=null; burstingRef.current=false; setClearing(false);
       setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
@@ -89,11 +92,11 @@ const Index = () => {
   }
   function undoMove() {
     if(!undo||busy)return;
-    streak.current=0; finishClear(); setSave(prev=>({...prev,game:undo})); setUndo(null); playUndo(prefs.current.sound);
+    streak.current=0; setHeat(0); finishClear(); setSave(prev=>({...prev,game:undo})); setUndo(null); playUndo(prefs.current.sound);
   }
   async function startLevel(level?:number) {
     if(transitioning.current)return;
-    streak.current=0;
+    streak.current=0; setHeat(0);
     finishClear();
     transitioning.current=true;
     try {
@@ -137,6 +140,7 @@ const Index = () => {
       onRestart={()=>setModal('restart')}
       onUndo={undoMove}
       clearing={clearing}
+      heat={heat}
       combo={combo}
     />
     {Capacitor.getPlatform()==='web'&&<div className="mx-auto flex justify-center py-2"><Link to="/store-assets" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-xs font-bold text-purple-700 hover:bg-purple-100">Store launch kit <ArrowRight size={14}/></Link></div>}
