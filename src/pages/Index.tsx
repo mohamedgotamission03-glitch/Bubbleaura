@@ -50,7 +50,7 @@ const Index = () => {
     } else { celebrated.current=false; if(!canPlay(game)) setModal('over'); }
   },[game]);
   useEffect(()=>{
-    setBannerVisible(false);
+    setBannerVisible(true);
     const start=()=>{void unlockAudio();};
     window.addEventListener('pointerdown',start);
     return ()=>{ clearTimers(); window.removeEventListener('pointerdown',start); stopAudio(); };

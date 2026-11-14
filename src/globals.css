@@ -95,8 +95,8 @@
   .game-tools .tool-button {height:44px;border-radius:12px;background:#ffffff1f;font-size:11px;}
   .tool-button { @apply gap-1.5 rounded-xl px-2 text-xs font-bold; color:#fff; }
   .tool-button:disabled {opacity:0.5;}
-  .ad-dock {height:calc(max(50px,var(--ad-banner-height,50px)) + 14px);padding-top:6px;padding-bottom:8px;}
-  .banner-slot { @apply relative flex w-full max-w-[320px] items-center justify-center rounded-lg text-[9px] font-semibold; height:max(50px,var(--ad-banner-height,50px));background:#eee6f8;border:1px dashed #cdbce1;color:#776189;pointer-events:none; }
+  .ad-dock {display:flex;flex:0 0 calc(max(50px,var(--ad-banner-height,50px)) + 14px);align-items:center;justify-content:center;padding:6px 0 8px;}
+  .banner-slot {width:min(100%,320px);height:max(50px,var(--ad-banner-height,50px));pointer-events:none;}
   .ad-label {position:absolute;left:6px;top:4px;font-size:7px;letter-spacing:1px;}
   .pill { @apply inline-flex items-center gap-2 rounded-full px-3 py-2 text-[9px] font-extrabold tracking-[1px]; background:#eae0f8;color:#7953aa; }
   .bloom-dialog {font-family:'Nunito',sans-serif;background:#fff;color:#50326c;box-shadow:0 20px 90px #49305c30;}

@@ -56,5 +56,6 @@ export default function GameScreen({ save, disabled, undoAvailable, bump, onPlac
         <Button variant="ghost" className="tool-button" onClick={onRestart}><RotateCcw size={17}/><span>Restart</span></Button>
       </div>
     </main>
+    <div className="ad-dock" aria-hidden="true"><div className="banner-slot"/></div>
   </div>;
 }
