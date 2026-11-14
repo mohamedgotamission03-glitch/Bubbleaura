@@ -24,7 +24,7 @@ function tone(at: number, freq: number, length: number, volume: number, type: Os
   osc.frequency.setValueAtTime(freq, at);
   osc.frequency.exponentialRampToValueAtTime(Math.max(40, slide), at + length);
   gain.gain.setValueAtTime(0.0001, at);
-  gain.gain.exponentialRampToValueAtTime(volume, at + 0.018);
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.012);
   gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
   osc.connect(gain);
   gain.connect(ctx.destination);
@@ -32,10 +32,10 @@ function tone(at: number, freq: number, length: number, volume: number, type: Os
   osc.stop(at + length + 0.02);
 }
 
-function sparkle(at: number, volume: number) {
+function sparkle(at: number, volume: number, length = 0.12) {
   const ctx = audio();
   if (!ctx) return;
-  const frames = Math.floor(ctx.sampleRate * 0.12);
+  const frames = Math.floor(ctx.sampleRate * length);
   const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < frames; i++) {
@@ -47,7 +47,7 @@ function sparkle(at: number, volume: number) {
   const gain = ctx.createGain();
   source.buffer = buffer;
   filter.type = 'highpass';
-  filter.frequency.setValueAtTime(1400, at);
+  filter.frequency.setValueAtTime(1500, at);
   gain.gain.setValueAtTime(volume, at);
   source.connect(filter);
   filter.connect(gain);
@@ -77,34 +77,52 @@ export async function unlockAudio() {
 export function playPlace(enabled: boolean) {
   const ctx = ready(enabled);
   if (!ctx) return;
-  tone(ctx.currentTime, 620, 0.07, 0.2, 'triangle', 780);
+  const notes = [523, 587, 659, 784, 880];
+  const note = notes[Math.floor(Math.random() * notes.length)];
+  const now = ctx.currentTime;
+  tone(now, note, 0.09, 0.15, 'triangle', note * 1.08);
+  tone(now + 0.025, note * 1.5, 0.11, 0.045, 'sine', note * 1.45);
+  tone(now, 150, 0.07, 0.055, 'sine', 85);
 }
 
 export function playClear(enabled: boolean, lines: number, streak = 1) {
   const ctx = ready(enabled);
   if (!ctx) return;
   const now = ctx.currentTime;
-  const step = Math.min(streak + lines - 1, 6);
-  const base = 494 * Math.pow(1.06, step);
-  const count = Math.min(1 + lines, 4);
-  for (let i = 0; i < count; i++) {
-    const note = base * Math.pow(1.2, i);
-    tone(now + i * 0.055, note, 0.13, 0.16 + step * 0.01, 'triangle', note * 1.03);
+  const heat = Math.min(Math.max(streak, lines), 7);
+  const scale = [523, 587, 659, 784, 880, 1046, 1175];
+  const first = Math.min(heat - 1, scale.length - 3);
+  const notes = lines >= 3 ? 4 : lines === 2 ? 3 : 2;
+
+  tone(now, 180 + heat * 14, 0.13, 0.11 + heat * 0.012, 'sine', 65);
+  for (let index = 0; index < notes; index++) {
+    const note = scale[first + index];
+    const at = now + index * (heat >= 3 ? 0.045 : 0.06);
+    tone(at, note, 0.16, 0.15 + heat * 0.012, 'triangle', note * 1.035);
+    if (heat >= 2) tone(at, note * 2, 0.1, 0.045 + heat * 0.004, 'sine');
   }
-  sparkle(now, 0.08 + step * 0.015);
+  sparkle(now + 0.025, 0.07 + heat * 0.018, heat >= 4 ? 0.19 : 0.12);
+  if (heat >= 3) tone(now + 0.17, scale[Math.min(first + notes, scale.length - 1)], 0.2, 0.1, 'sine');
 }
 
 export function playWin(enabled: boolean) {
   const ctx = ready(enabled);
   if (!ctx) return;
-  [523, 659, 784, 1046, 1318].forEach((note, index) => tone(ctx.currentTime + index * 0.08, note, 0.2, 0.22, 'triangle'));
-  sparkle(ctx.currentTime + 0.2, 0.16);
+  const now = ctx.currentTime;
+  [523, 659, 784, 1046, 1318].forEach((note, index) => {
+    tone(now + index * 0.075, note, 0.22, 0.18, 'triangle');
+    if (index > 1) tone(now + index * 0.075, note * 1.5, 0.14, 0.05, 'sine');
+  });
+  tone(now, 130, 0.22, 0.12, 'sine', 55);
+  sparkle(now + 0.17, 0.2, 0.24);
 }
 
 export function playUndo(enabled: boolean) {
   const ctx = ready(enabled);
   if (!ctx) return;
-  tone(ctx.currentTime, 440, 0.1, 0.12, 'sine', 280);
+  const now = ctx.currentTime;
+  tone(now, 440, 0.1, 0.12, 'sine', 280);
+  tone(now + 0.035, 660, 0.08, 0.05, 'triangle', 390);
 }
 
 export function stopAudio() {
