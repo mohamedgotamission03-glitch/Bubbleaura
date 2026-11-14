@@ -55,16 +55,15 @@ function sparkle(at: number, volume: number) {
   source.start(at);
 }
 
-const SOFT = ['Nice!', 'Good job!', 'Yes!'];
-const WARM = ['Awesome!', 'Great!', 'Doing good!'];
-const PEAK = ['Perfect!', 'Excellent!', 'Incredible!'];
+const SOFT = ['Nice!', 'Good job!', 'Doing good!', 'Yes!', 'Sweet!'];
+const WARM = ['Awesome!', 'Great!', 'Brilliant!', 'You got it!'];
+const PEAK = ['Perfect!', 'Excellent!', 'Incredible!', 'Fantastic!', 'Unstoppable!'];
 let cheerIndex = 0;
 
 export function cheerFor(lines = 1, win = false, streak = 1) {
   if (win) return 'You did it!';
   const heat = Math.max(streak, lines);
-  if (heat < 2) return '';
-  const bank = heat >= 4 || lines >= 3 ? PEAK : heat >= 3 ? WARM : SOFT;
+  const bank = heat >= 4 || lines >= 3 ? PEAK : heat >= 2 ? WARM : SOFT;
   const phrase = bank[cheerIndex % bank.length];
   cheerIndex += 1;
   return phrase;

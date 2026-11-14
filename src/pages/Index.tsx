@@ -94,7 +94,7 @@ const Index = () => {
   }
   async function startLevel(level?:number) {
     if(transitioning.current)return;
-    streak.current=0;
+    if(!(won(game)&&level===game.level+1))streak.current=0;
     finishClear();
     transitioning.current=true;
     try {
@@ -123,7 +123,7 @@ const Index = () => {
     } finally {setBusy(false);rewardPending.current=false;}
   }
   const titles: Record<Exclude<Modal,null>,string>={levels:'Your Cubellio journey',settings:'Make yourself at home',help:'Place. Clear. Pop!',pause:'Take a little breather',restart:'A fresh start?',win:'Level popped!',over:'Out of room, not out of chances'};
-  const descriptions: Record<Exclude<Modal,null>,string>={levels:'One little challenge at a time. Complete both goals to unlock the next level.',settings:'Your preferences and progress stay on this device.',help:'No timer. No rush. Just find your flow.',pause:'Your board is right where you left it.',restart:'Your current board will be cleared. Unlocked levels and best score stay saved.',win:'Both goals complete. Your next challenge is ready.',over:'There is no space for your remaining blocks.'};
+  const descriptions: Record<Exclude<Modal,null>,string>={levels:'One little challenge at a time. Complete both goals to unlock the next level.',settings:'Your preferences and progress stay on this device.',help:'No timer. No rush. Just find your flow.',pause:'Your board is right where you left it.',restart:'Your current board will be cleared. Unlocked levels and best score stay saved.',win:'Brilliant run! Both goals complete. Ready for your next challenge?',over:'There is no space for your remaining blocks.'};
   return <div className="app-shell">
     <GameScreen
       save={save}
