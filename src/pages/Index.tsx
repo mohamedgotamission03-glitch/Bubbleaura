@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import GameScreen from '@/components/GameScreen';
 import AdPrivacyControls from '@/components/AdPrivacyControls';
 import { canPlay, Game, newGame, readSave, revive, stagePlace, won } from '@/lib/puzzle';
-import { requestRewardedAd, rewardedAdsAvailable, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
+import { initializeAds, requestRewardedAd, rewardedAdsAvailable, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
 import { cheerFor, playClear, playPlace, playUndo, playWin, stopAudio, unlockAudio } from '@/lib/audio';
 import { ADMOB_CONFIG } from '@/config/admob';
 import { toast } from 'sonner';
@@ -50,7 +50,7 @@ const Index = () => {
     } else { celebrated.current=false; if(!canPlay(game)) setModal('over'); }
   },[game]);
   useEffect(()=>{
-    setBannerVisible(true);
+    void initializeAds().then(allowed=>{if(allowed)setBannerVisible(true);});
     const start=()=>{void unlockAudio();};
     window.addEventListener('pointerdown',start);
     return ()=>{ clearTimers(); window.removeEventListener('pointerdown',start); stopAudio(); };
