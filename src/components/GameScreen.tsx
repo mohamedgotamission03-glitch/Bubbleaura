@@ -58,7 +58,7 @@ export default function GameScreen({ save, disabled, undoAvailable, bump, onPlac
         </div>
         <div className="goal-tracks" aria-hidden="true"><span className="goal-track score-track"><i style={{ width: `${scoreProgress}%` }}/></span><span className="goal-track line-track"><i style={{ width: `${lineProgress}%` }}/></span></div>
       </div>
-      <PuzzleBoard board={game.board} pieces={game.pieces} onPlace={onPlace} disabled={disabled||clearing} soundEnabled={soundEnabled} highlightRows={combo?.rows} highlightCols={combo?.cols} combo={combo}/>
+      <PuzzleBoard board={game.board} pieces={game.pieces} onPlace={onPlace} disabled={disabled||clearing} soundEnabled={soundEnabled} highlightRows={clearing ? combo?.rows : []} highlightCols={clearing ? combo?.cols : []} combo={combo}/>
       <div className="game-tools grid grid-cols-3 gap-2">
         <Button variant="ghost" className="tool-button" disabled={!undoAvailable||disabled} onClick={onUndo}><Undo2 size={18}/><span>Undo</span></Button>
         <Button variant="ghost" className="tool-button" onClick={onPause}><Pause size={17} fill="currentColor"/><span>Pause</span></Button>

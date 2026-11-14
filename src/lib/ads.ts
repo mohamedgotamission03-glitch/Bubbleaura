@@ -3,21 +3,6 @@ import { AdMob, AdmobConsentStatus, BannerAdPluginEvents, BannerAdPosition, Bann
 import { ADMOB_CONFIG } from '@/config/admob';
 
 export type AdResult = { status: 'completed' | 'dismissed' | 'unavailable'; rewarded?: boolean };
-export type AdDiagnostics = { platform: string; pluginAvailable: boolean; appId: string; bannerId: string; testMode: boolean; initialization: string; consent: string; banner: string; lastError: string; updatedAt: string };
-const diagnosticListeners = new Set<(diagnostics: AdDiagnostics) => void>();
-const diagnostics: AdDiagnostics = { platform: Capacitor.getPlatform(), pluginAvailable: Capacitor.isPluginAvailable('AdMob'), appId: ADMOB_CONFIG.appId, bannerId: ADMOB_CONFIG.bannerId, testMode: ADMOB_CONFIG.testMode, initialization: 'Not started', consent: 'Not checked', banner: 'Not requested', lastError: 'None', updatedAt: '—' };
-function updateDiagnostics(patch: Partial<AdDiagnostics>) {
-  Object.assign(diagnostics, patch, { updatedAt: new Date().toLocaleTimeString() });
-  diagnosticListeners.forEach(listener => listener({ ...diagnostics }));
-}
-export function getAdDiagnostics(): AdDiagnostics { return { ...diagnostics }; }
-export function subscribeAdDiagnostics(listener: (diagnostics: AdDiagnostics) => void) {
-  diagnosticListeners.add(listener);
-  return () => diagnosticListeners.delete(listener);
-}
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : typeof error === 'object' && error !== null && 'message' in error ? String(error.message) : String(error);
-}
 export const nativeAdsAvailable = () => Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('AdMob');
 export const rewardedAdsAvailable = nativeAdsAvailable;
 let initialization: Promise<boolean> | null = null;
@@ -53,45 +38,28 @@ async function preloadInterstitial() {
   finally {loading=false;}
 }
 export function initializeAds(): Promise<boolean> {
-  if(!nativeAdsAvailable()) {
-    updateDiagnostics({ initialization: 'Unavailable on this platform', consent: 'Not applicable' });
-    return Promise.resolve(false);
-  }
+  if(!nativeAdsAvailable())return Promise.resolve(false);
   if(initialization)return initialization.then(()=>allowed);
-  updateDiagnostics({ initialization: 'Initializing', lastError: 'None' });
   initialization=(async()=>{
     try {
       await bounded(AdMob.initialize({initializeForTesting:ADMOB_CONFIG.testMode}));
-      updateDiagnostics({ initialization: 'Initialized' });
       let consent=await bounded(AdMob.requestConsentInfo());
       if(consent.status===AdmobConsentStatus.REQUIRED&&consent.isConsentFormAvailable)consent=await AdMob.showConsentForm();
       privacyRequired=consent.privacyOptionsRequirementStatus==='REQUIRED';
-      updateDiagnostics({ consent: `${consent.canRequestAds ? 'Requests allowed' : 'Requests not allowed'}; status ${consent.status}; privacy options ${privacyRequired ? 'required' : 'not required'}` });
       await AdMob.addListener(BannerAdPluginEvents.SizeChanged,size=>{
-        if(size.height>0){
-          document.documentElement.style.setProperty('--ad-banner-height',`${size.height}px`);
-          updateDiagnostics({ banner: `Loaded; height ${size.height}px` });
-        }
+        if(size.height>0)document.documentElement.style.setProperty('--ad-banner-height',`${size.height}px`);
       });
-      await AdMob.addListener(BannerAdPluginEvents.FailedToLoad,error=>{
+      await AdMob.addListener(BannerAdPluginEvents.FailedToLoad,()=>{
         bannerCreated=false;
-        updateDiagnostics({ banner: 'Load failed', lastError: `Banner ${error.code}: ${error.message}` });
         void AdMob.removeBanner().catch(()=>{});
         document.documentElement.style.setProperty('--ad-banner-height','50px');
       });
-      if(!consent.canRequestAds) {
-        updateDiagnostics({ initialization: 'Initialized; ad requests blocked by consent' });
-        return false;
-      }
+      if(!consent.canRequestAds)return false;
       allowed=true;
-      updateDiagnostics({ initialization: 'Ready to request ads' });
       void preloadInterstitial();
       void preloadRewarded();
       return true;
-    } catch (error) {
-      updateDiagnostics({ initialization: 'Initialization failed', lastError: errorMessage(error) });
-      return false;
-    }
+    } catch {return false;}
   })();
   return initialization;
 }
@@ -104,8 +72,7 @@ export function setBannerVisible(visible: boolean): void {
       return;
     }
     if(!await initializeAds()||!allowed||!bannerWanted)return;
-    if(bannerCreated){await bounded(AdMob.resumeBanner());updateDiagnostics({ banner: 'Resumed' });return;}
-    updateDiagnostics({ banner: 'Requesting banner' });
+    if(bannerCreated){await bounded(AdMob.resumeBanner());return;}
     const slot=document.querySelector('.banner-slot')?.getBoundingClientRect();
     await bounded(AdMob.showBanner({
       adId:ADMOB_CONFIG.bannerId,
@@ -115,13 +82,8 @@ export function setBannerVisible(visible: boolean): void {
       isTesting:ADMOB_CONFIG.testMode,
     }));
     bannerCreated=true;
-    updateDiagnostics({ banner: 'Request submitted; waiting for load result' });
     if(!bannerWanted)await bounded(AdMob.hideBanner());
-  }).catch(error=>{
-    bannerCreated=false;
-    updateDiagnostics({ banner: 'Request failed', lastError: errorMessage(error) });
-    void AdMob.removeBanner().catch(()=>{});
-  });
+  }).catch(()=>{bannerCreated=false;void AdMob.removeBanner().catch(()=>{});});
 }
 export async function showCompletionInterstitial(): Promise<AdResult> {
   // Only called by the between-puzzle transition. A late load cannot open an ad.

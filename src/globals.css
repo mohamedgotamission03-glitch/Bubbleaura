@@ -120,13 +120,6 @@
   .level-tile:disabled {opacity:0.55;}
   .setting-row { @apply flex items-center justify-between gap-3 rounded-2xl bg-[#faf7fe] p-4; }
   .setting-row>span { @apply flex items-center gap-3 text-sm font-bold; }
-  .ad-diagnostics {border:1px solid #e6d9f5;border-radius:16px;background:#faf7fe;padding:12px 14px;color:#50326c;}
-  .ad-diagnostics summary {cursor:pointer;font-size:13px;font-weight:900;}
-  .ad-diagnostics-grid {display:grid;gap:6px;margin-top:10px;}
-  .ad-diagnostic-row {display:grid;grid-template-columns:104px minmax(0,1fr);gap:8px;padding:7px 8px;border-radius:10px;background:#fff;font-size:10px;}
-  .ad-diagnostic-row span {color:#71558f;font-weight:800;text-transform:capitalize;}
-  .ad-diagnostic-row strong {overflow-wrap:anywhere;color:#382650;font-weight:800;}
-  .ad-diagnostics>p {margin-top:9px;font-size:10px;line-height:1.5;color:#71558f;}
   .ad-demo { @apply flex min-h-[240px] flex-col items-center justify-center rounded-2xl border border-dashed p-5 text-center; background:#faf7fe;border-color:#d7c3f0; }
 }
 @keyframes score-pop {from{transform:scale(1.12);}to{transform:scale(1);}}

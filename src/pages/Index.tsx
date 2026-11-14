@@ -100,7 +100,7 @@ const Index = () => {
       pendingFinal.current=null; burstingRef.current=false; setClearing(false);
       setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
       setBump(n=>n+1);
-    },430));
+    },460));
     timers.current.push(window.setTimeout(()=>setCombo(null),1500));
   }
   function undoMove() {
