@@ -92,13 +92,13 @@ const Index = () => {
     pendingFinal.current=staged.final; burstingRef.current=true; setClearing(true);
     const shown=Math.max(streak.current,lines);
     setCombo({id:Date.now(),label:cheer,points:gained,lines,rows:staged.rows,cols:staged.cols,streak:shown});
-    setSave(prev=>({...prev,game:staged.filled}));
+    setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
     if(won(staged.final)){celebrated.current=true;playWin(prefs.current.sound);}
     else playClear(prefs.current.sound,lines,shown);
     if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(shown>=4?[22,28,18,36]:lines>1?[16,24,16,28]:[18,26,18]);
     timers.current.push(window.setTimeout(()=>{
       pendingFinal.current=null; burstingRef.current=false; setClearing(false);
-      setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
+      setSave(prev=>({...prev,game:{...staged.final},best:Math.max(prev.best,staged.final.score)}));
       setBump(n=>n+1);
     },460));
     timers.current.push(window.setTimeout(()=>setCombo(null),1500));
