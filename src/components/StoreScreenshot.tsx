@@ -17,7 +17,7 @@ const StoreScreenshot = forwardRef<HTMLDivElement, { index: number; save: Save }
     </header>
     <div className="relative z-10 mx-auto mt-4 h-[418px] w-[266px] shrink-0 overflow-hidden rounded-[23px] border-[3px] border-white bg-[#f5f0ff] shadow-xl" inert>
       <div className="w-[360px] origin-top-left scale-[0.72]">
-        <GameScreen save={save} disabled={false} undoAvailable={save.game.moves > 0} bump={0} onPlace={()=>{}} onLevels={()=>{}} onSettings={()=>{}} onHelp={()=>{}} onPause={()=>{}} onUndo={()=>{}} onRestart={()=>{}}/>
+        <GameScreen save={save} soundEnabled={save.sound} disabled={false} undoAvailable={save.game.moves > 0} bump={0} onPlace={()=>{}} onLevels={()=>{}} onSettings={()=>{}} onHelp={()=>{}} onPause={()=>{}} onUndo={()=>{}} onRestart={()=>{}}/>
       </div>
     </div>
     <footer className="relative z-10 mt-auto flex items-center justify-center gap-2 pb-4 pt-3">
