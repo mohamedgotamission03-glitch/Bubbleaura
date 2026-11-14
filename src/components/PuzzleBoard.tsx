@@ -2,12 +2,14 @@ import { useRef, useState } from 'react';
 import { Board, fits, Piece, SIZE } from '@/lib/puzzle';
 import { BLOCK_COLORS } from '@/lib/block-colors';
 import { MousePointer2 } from 'lucide-react';
+import { playSelect } from '@/lib/audio';
 
 type Props = {
   board: Board;
   pieces: (Piece | null)[];
   onPlace: (index: number, row: number, col: number) => void;
   disabled: boolean;
+  soundEnabled: boolean;
   highlightRows?: number[];
   highlightCols?: number[];
   combo?: { id: number; label: string; points: number; lines?: number; streak?: number } | null;
@@ -27,7 +29,7 @@ export function PieceShape({ piece }: { piece: Piece }) {
   </span>;
 }
 
-export default function PuzzleBoard({ board, pieces, onPlace, disabled, highlightRows = [], highlightCols = [], combo = null }: Props) {
+export default function PuzzleBoard({ board, pieces, onPlace, disabled, soundEnabled, highlightRows = [], highlightCols = [], combo = null }: Props) {
   const boardRef = useRef<HTMLDivElement>(null);
   const start = useRef({ x: 0, y: 0 });
   const grabOffset = useRef({ x: 0, y: 0 });
@@ -105,6 +107,7 @@ export default function PuzzleBoard({ board, pieces, onPlace, disabled, highligh
           start.current = { x: event.clientX, y: event.clientY };
           moved.current = false;
           setSelected(index);
+          playSelect(soundEnabled);
         }}
         onPointerMove={event => {
           if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;

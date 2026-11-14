@@ -125,6 +125,45 @@ export function playUndo(enabled: boolean) {
   tone(now + 0.035, 660, 0.08, 0.05, 'triangle', 390);
 }
 
+export function playSelect(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  tone(now, 392, 0.07, 0.08, 'triangle', 523);
+  tone(now + 0.035, 659, 0.09, 0.045, 'sine', 784);
+}
+
+export function playMenu(enabled: boolean, opening: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const notes = opening ? [523, 659] : [659, 523];
+  notes.forEach((note, index) => tone(now + index * 0.045, note, 0.09, 0.055, 'sine', note * 0.98));
+}
+
+export function playLevelStart(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [392, 523, 659, 784].forEach((note, index) => tone(now + index * 0.07, note, 0.16, 0.09, 'triangle'));
+  sparkle(now + 0.17, 0.07, 0.14);
+}
+
+export function playGameOver(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [523, 440, 392].forEach((note, index) => tone(now + index * 0.12, note, 0.18, 0.075, 'sine', note * 0.96));
+}
+
+export function playRevive(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [392, 523, 659, 1046].forEach((note, index) => tone(now + index * 0.055, note, 0.2, 0.12, 'triangle'));
+  sparkle(now + 0.12, 0.15, 0.2);
+}
+
 export function stopAudio() {
   if (context?.state === 'running') void context.suspend();
 }

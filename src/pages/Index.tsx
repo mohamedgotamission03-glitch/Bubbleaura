@@ -9,7 +9,7 @@ import GameScreen from '@/components/GameScreen';
 import AdPrivacyControls from '@/components/AdPrivacyControls';
 import { canPlay, Game, newGame, readSave, revive, stagePlace, won } from '@/lib/puzzle';
 import { initializeAds, requestRewardedAd, rewardedAdsAvailable, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
-import { cheerFor, playClear, playPlace, playUndo, playWin, stopAudio, unlockAudio } from '@/lib/audio';
+import { cheerFor, playClear, playGameOver, playLevelStart, playMenu, playPlace, playRevive, playUndo, playWin, stopAudio, unlockAudio } from '@/lib/audio';
 import { ADMOB_CONFIG } from '@/config/admob';
 import { toast } from 'sonner';
 
@@ -28,6 +28,8 @@ const Index = () => {
   const pendingFinal = useRef<Game|null>(null);
   const burstingRef = useRef(false);
   const celebrated = useRef(false);
+  const gameOverSound = useRef(false);
+  const previousModal = useRef<Modal>(null);
   const prefs = useRef({sound:true,music:true,haptics:true});
   const transitioning = useRef(false);
   const rewardPending = useRef(false);
@@ -47,8 +49,21 @@ const Index = () => {
         if(!celebrated.current){celebrated.current=true;playWin(prefs.current.sound);}
       }
       setModal('win');
-    } else { celebrated.current=false; if(!canPlay(game)) setModal('over'); }
+    } else {
+      celebrated.current=false;
+      if(!canPlay(game)) {
+        setModal('over');
+        if(!gameOverSound.current){gameOverSound.current=true;playGameOver(prefs.current.sound);}
+      } else gameOverSound.current=false;
+    }
   },[game]);
+  useEffect(()=>{
+    if(modal!==previousModal.current) {
+      if(modal && modal!=='win' && modal!=='over') playMenu(prefs.current.sound,true);
+      else if(!modal && previousModal.current) playMenu(prefs.current.sound,false);
+      previousModal.current=modal;
+    }
+  },[modal]);
   useEffect(()=>{
     void initializeAds().then(allowed=>{if(allowed)setBannerVisible(true);});
     const start=()=>{void unlockAudio();};
@@ -105,7 +120,7 @@ const Index = () => {
         await showCompletionInterstitial().catch(()=>({status:'unavailable'}));
       }
       if(level===undefined)setModal('levels');
-      else {setSave(prev=>({...prev,game:newGame(level)}));setUndo(null);setModal(null);}
+      else {setSave(prev=>({...prev,game:newGame(level)}));setUndo(null);setModal(null);playLevelStart(prefs.current.sound);}
     } finally {setBusy(false);transitioning.current=false;}
   }
   function retry() {void startLevel(game.level);}
@@ -117,7 +132,7 @@ const Index = () => {
       const result=await requestRewardedAd();
       if(result.status==='completed'&&result.rewarded===true) {
         setSave(prev=>prev.game.revived?prev:{...prev,game:revive(prev.game)});
-        setUndo(null);setModal(null);
+        setUndo(null);setModal(null);playRevive(prefs.current.sound);
         toast.success('Board cleared. Your score is safe!');
       } else toast.info(result.status==='unavailable'?'No video available right now. You can still restart.':'Video not completed. No revive was used.');
     } finally {setBusy(false);rewardPending.current=false;}
@@ -127,6 +142,7 @@ const Index = () => {
   return <div className="app-shell">
     <GameScreen
       save={save}
+      soundEnabled={save.sound}
       disabled={Boolean(modal)||busy||won(game)}
       undoAvailable={Boolean(undo)}
       bump={bump}
