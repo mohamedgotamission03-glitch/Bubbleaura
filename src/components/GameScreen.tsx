@@ -23,7 +23,11 @@ type Props = {
 export default function GameScreen({ save, disabled, undoAvailable, bump, onPlace, onLevels, onSettings, onHelp, onPause, onUndo, onRestart, clearing=false, soundEnabled, combo=null }: Props) {
   const { game } = save;
   const target = goal(game.level);
-  return <div className="phone-game mx-auto flex w-full max-w-[360px] flex-col">
+  const chapters = ['Petal Path', 'Candy Cove', 'Jelly Jungle', 'Star Garden'];
+  const chapter = chapters[Math.floor((game.level - 1) / 3)];
+  const scoreProgress = Math.min(100, Math.round(game.score / target.score * 100));
+  const lineProgress = Math.min(100, Math.round(game.lines / target.lines * 100));
+  return <div className={`phone-game chapter-${Math.ceil(game.level / 3)} mx-auto flex w-full max-w-[360px] flex-col`}>
     <header className="game-header flex shrink-0 items-center justify-between px-3.5">
       <div className="flex items-center gap-2">
         <img src="/icon.svg" alt="" className="h-8 w-8 rounded-xl"/>
@@ -46,9 +50,13 @@ export default function GameScreen({ save, disabled, undoAvailable, bump, onPlac
           <p className="text-base font-extrabold text-white">{save.best.toLocaleString()}</p>
         </div>
       </div>
-      <div className="compact-goals grid grid-cols-2 gap-2" aria-label="Level goals">
-        <div className="compact-goal"><Star size={16} className="text-[#945017]"/><span>Points <strong>{Math.min(game.score,target.score)} / {target.score}</strong></span></div>
-        <div className="compact-goal"><Layers3 size={16} className="text-[#087d70]"/><span>Lines <strong>{Math.min(game.lines,target.lines)} / {target.lines}</strong></span></div>
+      <div className="journey-card" aria-label={`${chapter}, level goals`}>
+        <div className="journey-heading"><span><span className="journey-spark">✦</span> {chapter}</span><span>LEVEL {String(game.level).padStart(2, '0')} / 12</span></div>
+        <div className="compact-goals grid grid-cols-2 gap-2">
+          <div className="compact-goal"><Star size={15} className="text-[#945017]"/><span>Points <strong>{Math.min(game.score,target.score).toLocaleString()} / {target.score.toLocaleString()}</strong></span></div>
+          <div className="compact-goal"><Layers3 size={15} className="text-[#087d70]"/><span>Lines <strong>{Math.min(game.lines,target.lines)} / {target.lines}</strong></span></div>
+        </div>
+        <div className="goal-tracks" aria-hidden="true"><span className="goal-track score-track"><i style={{ width: `${scoreProgress}%` }}/></span><span className="goal-track line-track"><i style={{ width: `${lineProgress}%` }}/></span></div>
       </div>
       <PuzzleBoard board={game.board} pieces={game.pieces} onPlace={onPlace} disabled={disabled||clearing} soundEnabled={soundEnabled} highlightRows={combo?.rows} highlightCols={combo?.cols} combo={combo}/>
       <div className="game-tools grid grid-cols-3 gap-2">
