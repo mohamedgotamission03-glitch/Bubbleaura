@@ -19,6 +19,9 @@ export const privacyOptionsRequired = () => privacyRequired;
 let bannerWanted = false;
 let bannerCreated = false;
 let bannerQueue = Promise.resolve();
+let bannerStatus = 'Banner not requested yet';
+let bannerRetries = 0;
+export const getBannerStatus = () => bannerStatus;
 
 function bounded<T>(promise: Promise<T>, milliseconds = 10000): Promise<T> {
   return new Promise((resolve,reject)=>{
@@ -49,10 +52,14 @@ export function initializeAds(): Promise<boolean> {
       await AdMob.addListener(BannerAdPluginEvents.SizeChanged,size=>{
         if(size.height>0)document.documentElement.style.setProperty('--ad-banner-height',`${size.height}px`);
       });
-      await AdMob.addListener(BannerAdPluginEvents.FailedToLoad,()=>{
+      await AdMob.addListener(BannerAdPluginEvents.Loaded,()=>{bannerStatus='Banner loaded';bannerRetries=0;});
+      await AdMob.addListener(BannerAdPluginEvents.FailedToLoad,error=>{
         bannerCreated=false;
+        bannerStatus=`Banner not loaded (code ${error.code}: ${error.message})`;
         void AdMob.removeBanner().catch(()=>{});
         document.documentElement.style.setProperty('--ad-banner-height','0px');
+        // A banner with no fill is retried a few times instead of staying empty for the whole session.
+        if(bannerRetries<6){bannerRetries++;setTimeout(()=>{if(bannerWanted)setBannerVisible(true);},Math.min(120000,15000*bannerRetries));}
       });
       if(!consent.canRequestAds)return false;
       allowed=true;
