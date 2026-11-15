@@ -6,7 +6,7 @@ All runtime and official test IDs are in `src/config/admob.ts`. Production is ac
 
 - App: `ca-app-pub-2832761207597793~1236454728`
 - Banner: `ca-app-pub-2832761207597793/1511961908`
-- Interstitial: `ca-app-pub-2832761207597793/8833599488`
+- Interstitial: `ca-app-pub-2832761207597793/1754349531`
 - Standard rewarded: `ca-app-pub-2832761207597793/5661804951`
 - Reward: amount **1**, item **Bonus moves**.
 

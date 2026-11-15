@@ -4,7 +4,7 @@ export const ADMOB_CONFIG = {
   testMode: false,
   appId: 'ca-app-pub-2832761207597793~1236454728',
   bannerId: 'ca-app-pub-2832761207597793/1511961908',
-  interstitialId: 'ca-app-pub-2832761207597793/8833599488',
+  interstitialId: 'ca-app-pub-2832761207597793/1754349531',
   rewardedId: 'ca-app-pub-2832761207597793/5661804951',
   puzzlesPerInterstitial: 3,
   rewardAmount: 1,
