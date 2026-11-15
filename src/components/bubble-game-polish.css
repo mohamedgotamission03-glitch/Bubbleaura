@@ -49,24 +49,6 @@
 @keyframes splash-out{to{opacity:0;visibility:hidden}}
 @media(max-width:360px){.bubble-game.is-playing .bomb-booster{left:calc(50% - 134px);width:38px;height:38px}.bubble-game.is-playing .swap-bubbles{left:calc(50% - 88px)}.splash h1{font-size:28px}}
 @media(min-width:600px){.bubble-game.is-playing{max-width:480px}}
-main.bubble-app{background:radial-gradient(circle at 50% 18%,#6a4bd0,#2c1d62 72%)}
-main.bubble-app .bubble-game:not(.is-playing){border-color:#ffffff40;background:radial-gradient(circle at 50% 0%,#7b5ad8,#3a2784 55%,#2c1d62);box-shadow:0 24px 70px #120a3a80,0 0 60px #7b5ad855}
+.bubble-game:not(.is-playing){background:linear-gradient(180deg,#d4f0fb,#e9fbf6 55%,#fffaf3)}
 .bubble-game:not(.is-playing) .bubble-header{background:transparent}
-.bubble-game:not(.is-playing) .bubble-brand b{color:#fff;text-shadow:0 2px 0 #2c1d62}
-.bubble-game:not(.is-playing) .bubble-brand small{color:#c9bcf5}
-.bubble-game:not(.is-playing) .round-control{background:#ffffff26;color:#fff}
-.bubble-game:not(.is-playing) .menu-art{background:radial-gradient(ellipse at 50% 85%,#ffffff33,#ffffff14 65%,transparent)}
-.bubble-game:not(.is-playing) .art-leaf{color:#8dffd0aa}
-.bubble-game:not(.is-playing) .menu-art .art-launcher{width:64px;height:64px;left:calc(50% - 32px);bottom:-10px;border-radius:20px;background:none;box-shadow:0 8px 18px #120a3a80,0 0 28px #ffc53d55}
-.bubble-game:not(.is-playing) .menu-kicker,.bubble-game:not(.is-playing) .result-kicker{color:#ffd87c}
-.bubble-game:not(.is-playing) .menu-screen h1,.bubble-game:not(.is-playing) .levels-screen h2,.bubble-game:not(.is-playing) .settings-screen h2,.bubble-game:not(.is-playing) .result-screen h2{color:#fff;text-shadow:0 3px 0 #2c1d6280}
-.bubble-game:not(.is-playing) .menu-screen h1 em{color:#ffd87c}
-.bubble-game:not(.is-playing) .menu-copy,.bubble-game:not(.is-playing) .levels-screen>p,.bubble-game:not(.is-playing) .settings-screen>p,.bubble-game:not(.is-playing) .result-description{color:#d8cdfa}
-.bubble-game:not(.is-playing) .menu-level-button,.bubble-game:not(.is-playing) .quiet-button,.bubble-game:not(.is-playing) .back-link{color:#e6dcff}
-.bubble-game:not(.is-playing) .menu-record{background:#ffffff1f;color:#d8cdfa}
-.bubble-game:not(.is-playing) .menu-record strong{color:#fff}
-.bubble-game:not(.is-playing) .gift-card:not(.ready){border-color:#ffffff55;background:#ffffff1a;color:#fff}
-.bubble-game:not(.is-playing) .gift-card:not(.ready) small{color:#d8cdfa}
-.bubble-game:not(.is-playing) .world-title{color:#e6dcff}
-.bubble-game:not(.is-playing) .legal-links a{color:#e6dcff}
-.bubble-game:not(.is-playing) .legal-foot{color:#c9bcf5}
+.bubble-game:not(.is-playing) .menu-art .art-launcher{width:64px;height:64px;left:calc(50% - 32px);bottom:-10px;border-radius:20px;background:none;box-shadow:0 8px 16px #2a6f9a33}
