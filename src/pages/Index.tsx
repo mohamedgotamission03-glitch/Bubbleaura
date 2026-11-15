@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { initializeAds, requestRewardedAd, rewardedAdsAvailable, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
 import { ADMOB_CONFIG } from '@/config/admob';
@@ -28,7 +28,7 @@ function readSave(): Save {
     const parsed = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
     if (parsed && Number.isInteger(parsed.unlocked) && Array.isArray(parsed.best)) {
       const merged = { ...freshSave(), ...parsed, stars: Array.isArray(parsed.stars) ? parsed.stars : [], unlocked: Math.max(1, Math.min(MAX_LEVEL, parsed.unlocked)) };
-      if (!localStorage.getItem('gift-preview-reset-2')) { localStorage.setItem('gift-preview-reset-2', '1'); return { ...merged, gift: '', giftStreak: 0 }; }
+      if (!localStorage.getItem('gift-preview-reset-3')) { localStorage.setItem('gift-preview-reset-3', '1'); return { ...merged, gift: '', giftStreak: 0 }; }
       return merged;
     }
   } catch { /* Storage may be unavailable offline or in private mode. */ }
@@ -52,11 +52,14 @@ export default function Index() {
   const [splash, setSplash] = useState(true);
   useEffect(() => { const t = setTimeout(() => setSplash(false), 1700); return () => clearTimeout(t); }, []);
   const giftReady = save.gift !== dayStamp();
-  const claimGift = () => setSave(prev => {
-    if (prev.gift === dayStamp()) return prev;
-    const streak = prev.gift === dayStamp(-1) ? Math.min(7, prev.giftStreak + 1) : 1;
-    return { ...prev, gift: dayStamp(), giftStreak: streak, bombs: prev.bombs + (streak >= 7 ? 3 : streak >= 4 ? 2 : 1) };
-  });
+  const [giftPopup, setGiftPopup] = useState<{ amount: number; streak: number } | null>(null);
+  const claimGift = () => {
+    if (save.gift === dayStamp()) return;
+    const streak = save.gift === dayStamp(-1) ? Math.min(7, save.giftStreak + 1) : 1;
+    const amount = streak >= 7 ? 3 : streak >= 4 ? 2 : 1;
+    setSave(prev => ({ ...prev, gift: dayStamp(), giftStreak: streak, bombs: prev.bombs + amount }));
+    setGiftPopup({ amount, streak });
+  };
   const useBooster = () => {
     if (save.bombs > 0 && engine.current?.useBomb()) setSave(prev => ({ ...prev, bombs: prev.bombs - 1 }));
   };
@@ -149,6 +152,7 @@ export default function Index() {
   return <main className={`bubble-app ${screen === 'game' ? '' : 'menu-app'}`}>
     {splash && <div className="splash" aria-hidden="true"><img src="/icon.svg" alt="" className="splash-logo" /><h1>Bubble Aura</h1><p>Pop &amp; Match</p><div className="splash-bar"><i /></div></div>}
     <section className={`bubble-game ${screen === 'game' ? 'is-playing' : ''}`} aria-label="Bubble Aura: Pop and Match">
+      {giftPopup && <div className="bubble-overlay" onClick={() => setGiftPopup(null)}><div className="result-card gift-pop" role="dialog" aria-label="Daily gift collected" onClick={e => e.stopPropagation()}><div className="confetti" aria-hidden="true">{Array.from({ length: 22 }, (_, i) => <i key={i} style={{ '--i': i } as CSSProperties} />)}</div><span className="gift-burst">🎁</span><p className="result-kicker">DAILY GIFT · DAY {giftPopup.streak}</p><h2>Surprise! 🎉</h2><div className="gift-reward"><Bomb size={26} /><strong>+{giftPopup.amount}</strong><span>{giftPopup.amount === 1 ? 'bomb' : 'bombs'}</span></div><p>Come back tomorrow for another one. A 4-day streak gives 2 bombs and 7 days gives 3!</p><Button className="bubble-primary" onClick={() => setGiftPopup(null)}>Yay, thanks!</Button></div></div>}
       <header className="bubble-header"><button className="bubble-brand" onClick={() => setScreen('menu')} aria-label="Main menu"><img src="/icon.svg" alt="" className="h-9 w-9 shrink-0 rounded-xl" /><span><b>Bubble Aura</b><small>Pop &amp; Match</small></span></button><button className="round-control" onClick={() => setScreen('settings')} aria-label="Settings"><Settings2 size={19} /></button></header>
       {screen === 'menu' && <div className="menu-screen menu-hub"><div className="hub-stats"><span className="hub-chip"><Trophy size={15} />{highScore.toLocaleString()}</span><span className="hub-chip"><Star size={15} fill="currentColor" />{totalStars}</span><span className="hub-chip"><Bomb size={15} />{save.bombs}</span></div><div className="menu-art"><div className="art-bubble bubble-a" /><div className="art-bubble bubble-b" /><div className="art-bubble bubble-c" /><div className="art-bubble bubble-d" /><div className="hub-title"><b>Bubble</b><b>Aura</b><small>Pop &amp; Match</small></div></div><div className="hub-actions"><Button className="bubble-primary hub-play" onClick={() => startLevel(save.unlocked)}><Play size={22} fill="currentColor" /><span>{save.unlocked > 1 ? 'Continue' : 'Play'}</span><small>Level {save.unlocked}</small></Button><div className="hub-tiles"><button className="hub-tile" onClick={() => setScreen('levels')}><LayoutGrid size={22} /><b>Levels</b><small>{MAX_LEVEL} to play</small></button>{giftReady ? <button className="hub-tile ready" onClick={claimGift}><Gift size={22} /><b>Daily gift</b><small>Free bomb!</small></button> : <div className="hub-tile done"><Gift size={22} /><b>Day {save.giftStreak}</b><small>Gift tomorrow</small></div>}</div></div></div>}
       {screen === 'levels' && <div className="levels-screen"><button className="back-link" onClick={() => setScreen('menu')}><ArrowLeft size={17} /> Main menu</button><h2>Choose a level</h2><p>{totalStars} ★ collected across {WORLDS.length} worlds.</p>{WORLDS.map((world, w) => <div key={world.name} className="world-block"><h3 className="world-title"><i style={{ background: world.top }} />{world.name}</h3><div className="levels-grid">{Array.from({ length: 10 }, (_, i) => w * 10 + i + 1).map(n => <button key={n} className={`level-tile-bubble ${n === save.unlocked ? 'current' : ''}`} disabled={n > save.unlocked} onClick={() => startLevel(n)}><span>{n > save.unlocked ? '🔒' : n}</span><small>{'★'.repeat(save.stars[n - 1] || 0) || ' '}</small></button>)}</div></div>)}</div>}
