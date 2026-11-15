@@ -16,6 +16,11 @@ export const SLIDES: Slide[] = [
   { scene: { level: 14, mode: 'aim' }, tag: 'TOUGHER TWISTS', title: ['Stone bubbles', 'keep you thinking'], subtitle: 'New challenges as you go.', top: '#e08a2e', bottom: '#4a1f4a', accent: '#fff3d2' },
 ];
 
+const MENU_SLIDE: Slide = { scene: SLIDES[0].scene, tag: 'EASY TO START', title: ['Tap Play', 'and pop away'], subtitle: 'A friendly home with levels and gifts.', top: '#2c8fd6', bottom: '#1b2f7a', accent: '#ffd45c' };
+const MONTAGE_SLIDE: Slide = { scene: SLIDES[1].scene, tag: '60 UNIQUE LEVELS', title: ['Hearts, waves,', 'diamonds & more'], subtitle: 'A fresh layout every single level.', top: '#c2457d', bottom: '#3a1a52', accent: '#ffd45c' };
+const GIFT_SLIDE: Slide = { scene: SLIDES[4].scene, tag: 'DAILY GIFT', title: ['A free bomb', 'every day'], subtitle: 'Build a streak for bigger rewards.', top: '#e08a2e', bottom: '#4a1f4a', accent: '#fff3d2' };
+const MONTAGE_LEVELS = [2, 3, 4, 8, 9, 10];
+
 export const FORMATS = {
   phone: { label: 'Phone', w: 1080, h: 1920 },
   tablet7: { label: '7" tablet', w: 1200, h: 1920 },
@@ -260,7 +265,103 @@ export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 
 const easeOutBack = (x: number) => { const c = 1.70158; return 1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2; };
 
-function drawTitleCard(ctx: CanvasRenderingContext2D, W: number, H: number, local: number, t: number, icon: HTMLImageElement, line: string, sub: string) {
+function pill(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, fill: string, shadow: string) {
+  roundRect(g, x, y + 3, w, h, h / 2); g.fillStyle = shadow; g.fill();
+  roundRect(g, x, y, w, h, h / 2); g.fillStyle = fill; g.fill();
+}
+
+// A canvas drawing of the real home screen, used for the trailer.
+function drawMenuMock(canvas: HTMLCanvasElement, local: number, t: number, icon: HTMLImageElement) {
+  const g = canvas.getContext('2d')!;
+  g.setTransform(2, 0, 0, 2, 0, 0);
+  g.clearRect(0, 0, SCENE_W, SCENE_H);
+  const sky = g.createLinearGradient(0, 0, 0, SCENE_H);
+  sky.addColorStop(0, '#d4f0fb'); sky.addColorStop(0.55, '#e9fbf6'); sky.addColorStop(1, '#fffaf3');
+  g.fillStyle = sky; g.fillRect(0, 0, SCENE_W, SCENE_H);
+  g.fillStyle = '#ffffff';
+  g.beginPath(); g.ellipse(30, SCENE_H, 170, 70, 0, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.ellipse(SCENE_W - 10, SCENE_H + 10, 190, 80, 0, 0, Math.PI * 2); g.fill();
+  g.textBaseline = 'alphabetic';
+
+  g.save(); roundRect(g, 20, 20, 42, 42, 14); g.clip(); g.drawImage(icon, 20, 20, 42, 42); g.restore();
+  g.textAlign = 'left'; g.fillStyle = '#2d4668'; g.font = `900 19px ${FONT}`; g.fillText('Bubble Aura', 72, 42);
+  g.fillStyle = '#96a1af'; g.font = `800 10px ${FONT}`; g.fillText('POP & MATCH', 72, 57);
+
+  const chips: [string, string][] = [['🏆', '4,820'], ['⭐', '36'], ['💣', '3']];
+  chips.forEach(([emoji, text], i) => {
+    const x = 60 + i * 100;
+    pill(g, x, 86, 88, 34, '#ffffff', '#bcd8e3');
+    g.fillStyle = '#3d4f6b'; g.textAlign = 'center'; g.font = `900 14px ${FONT}`;
+    g.fillText(`${emoji} ${text}`, x + 44, 108);
+  });
+
+  [[56, 178, 30, 0], [338, 160, 26, 1], [82, 306, 23, 4], [316, 300, 29, 2]].forEach(([x, y, r, c], i) => glossyBubble(g, x, y + Math.sin(t * 2 + i) * 6, r, COLORS[c], 1));
+  g.save(); g.translate(SCENE_W / 2, 210); g.rotate(-0.05);
+  g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 10;
+  g.font = `900 66px ${FONT}`;
+  g.strokeStyle = '#5a47c2'; g.strokeText('Bubble', 0, 0); g.fillStyle = '#ffffff'; g.fillText('Bubble', 0, 0);
+  g.strokeStyle = '#c9791a'; g.strokeText('Aura', 0, 62); g.fillStyle = '#ffd45c'; g.fillText('Aura', 0, 62);
+  pill(g, -62, 86, 124, 26, '#7968d9', '#5949b4');
+  g.fillStyle = '#ffffff'; g.font = `900 11px ${FONT}`; g.fillText('POP & MATCH', 0, 104);
+  g.restore();
+
+  const pressed = local > 2.6 && local < 3.1;
+  const pulse = pressed ? 0.95 : 1 + Math.sin(t * 3) * 0.015;
+  g.save(); g.translate(SCENE_W / 2, 486); g.scale(pulse, pulse);
+  roundRect(g, -170, -30 + (pressed ? 2 : 6), 340, 68, 22); g.fillStyle = '#c93a69'; g.fill();
+  const play = g.createLinearGradient(0, -34, 0, 34); play.addColorStop(0, '#ff86ad'); play.addColorStop(1, '#ff4d86');
+  roundRect(g, -170, -34 + (pressed ? 4 : 0), 340, 68, 22); g.fillStyle = play; g.fill();
+  g.fillStyle = '#ffffff'; g.font = `900 24px ${FONT}`; g.textAlign = 'center';
+  g.fillText('▶  Continue', -20, 8 + (pressed ? 4 : 0));
+  roundRect(g, 66, -10 + (pressed ? 4 : 0), 76, 24, 12); g.fillStyle = 'rgba(255,255,255,0.28)'; g.fill();
+  g.fillStyle = '#ffffff'; g.font = `900 12px ${FONT}`; g.fillText('Level 12', 104, 7 + (pressed ? 4 : 0));
+  g.restore();
+
+  roundRect(g, 30, 590, 168, 88, 20); g.fillStyle = '#bcd8e3'; g.fill();
+  roundRect(g, 30, 586, 168, 88, 20); g.fillStyle = '#ffffff'; g.fill();
+  g.textAlign = 'center'; g.fillStyle = '#4a5f7d'; g.font = `900 15px ${FONT}`;
+  g.fillText('▦', 114, 616); g.fillText('Levels', 114, 640);
+  g.fillStyle = '#8a9bb0'; g.font = `800 11px ${FONT}`; g.fillText('60 to play', 114, 658);
+  const wiggle = Math.sin(t * 9) * 0.03;
+  g.save(); g.translate(286, 630); g.rotate(wiggle);
+  roundRect(g, -84, -40, 168, 88, 20); g.fillStyle = '#e6992b'; g.fill();
+  roundRect(g, -84, -44, 168, 88, 20); g.fillStyle = '#fff3d2'; g.fill();
+  g.fillStyle = '#a8570c'; g.font = `900 15px ${FONT}`; g.fillText('🎁 Daily gift', 0, -2);
+  g.fillStyle = '#b8741f'; g.font = `800 11px ${FONT}`; g.fillText('Free bomb!', 0, 20);
+  g.restore();
+}
+
+function drawGiftMock(canvas: HTMLCanvasElement, local: number, t: number, icon: HTMLImageElement) {
+  drawMenuMock(canvas, 0, t, icon);
+  const g = canvas.getContext('2d')!;
+  g.fillStyle = 'rgba(32,57,85,0.55)'; g.fillRect(0, 0, SCENE_W, SCENE_H);
+  const pop = easeOutBack(Math.min(1, local / 0.5));
+  g.save(); g.translate(SCENE_W / 2, 380); g.scale(pop, pop);
+  roundRect(g, -150, -190, 300, 380, 30); g.fillStyle = '#fffaf1'; g.fill();
+  g.lineWidth = 3; g.strokeStyle = '#ffffff'; g.stroke();
+  g.textAlign = 'center';
+  g.font = '72px sans-serif'; g.fillText('🎁', 0, -92 + Math.sin(t * 6) * -10);
+  g.fillStyle = '#786bd0'; g.font = `900 11px ${FONT}`; g.fillText('DAILY GIFT · DAY 4', 0, -52);
+  g.fillStyle = '#304c69'; g.font = `900 30px ${FONT}`; g.fillText('Surprise! 🎉', 0, -14);
+  pill(g, -78, 8, 156, 52, '#fff3d2', '#e6992b');
+  g.fillStyle = '#a8570c'; g.font = `900 24px ${FONT}`; g.fillText('💣 +2 bombs', 0, 43);
+  g.fillStyle = '#77869a'; g.font = `700 12px ${FONT}`;
+  g.fillText('Come back tomorrow for another one!', 0, 92);
+  pill(g, -110, 112, 220, 50, '#7968d9', '#5949b4');
+  g.fillStyle = '#ffffff'; g.font = `900 16px ${FONT}`; g.fillText('Yay, thanks!', 0, 143);
+  g.restore();
+  const colors = ['#ff5a8a', '#ffca35', '#20d2b5', '#8b63f0'];
+  for (let i = 0; i < 40; i++) {
+    const x = (i * 53) % SCENE_W;
+    const y = ((local * 220 + i * 61) % (SCENE_H + 40)) - 20;
+    g.save(); g.translate(x, y); g.rotate(local * 4 + i);
+    g.fillStyle = colors[i % 4];
+    if (i % 3 === 0) { g.beginPath(); g.arc(0, 0, 5, 0, Math.PI * 2); g.fill(); } else g.fillRect(-4, -6, 8, 12);
+    g.restore();
+  }
+}
+
+function drawTitleCard(ctx: CanvasRenderingContext2D, W: number, H: number, local: number, t: number, icon: HTMLImageElement, sub: string, chips: string[] = []) {
   const u = W / 1080;
   drawBackdrop(ctx, W, H, SLIDES[0], t, u);
   const pop = easeOutBack(Math.min(1, local / 0.8));
@@ -274,28 +375,48 @@ function drawTitleCard(ctx: CanvasRenderingContext2D, W: number, H: number, loca
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowOffsetY = 8 * u;
   ctx.fillStyle = '#ffffff'; ctx.font = `900 ${fitSize(ctx, 'Bubble Aura', 900, 140 * u, W * 0.88)}px ${FONT}`;
-  ctx.fillText(line, W / 2, H * 0.55);
+  ctx.fillText('Bubble Aura', W / 2, H * 0.55);
   ctx.restore();
   ctx.fillStyle = SLIDES[0].accent; ctx.font = `900 ${fitSize(ctx, sub, 900, 62 * u, W * 0.88)}px ${FONT}`;
   ctx.fillText(sub, W / 2, H * 0.55 + 100 * u);
+  chips.forEach((text, i) => {
+    const appear = Math.min(1, Math.max(0, (local - 0.5 - i * 0.25) / 0.3));
+    if (appear <= 0) return;
+    ctx.font = `900 ${38 * u}px ${FONT}`;
+    const w = ctx.measureText(text).width + 70 * u, h = 76 * u, y = H * 0.55 + 190 * u + i * 100 * u;
+    ctx.save(); ctx.globalAlpha = appear; ctx.translate(W / 2, y + h / 2); ctx.scale(0.8 + 0.2 * appear, 0.8 + 0.2 * appear);
+    roundRect(ctx, -w / 2, -h / 2, w, h, h / 2); ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.fillText(text, 0, 13 * u);
+    ctx.restore();
+  });
 }
 
-type Part = { kind: 'intro' | 'outro' } | { kind: 'play'; slide: number };
-const PARTS: (Part & { len: number })[] = [
+type PartKind = 'intro' | 'menu' | 'play' | 'montage' | 'gift' | 'outro';
+type Part = { kind: PartKind; len: number; slide?: number };
+const PARTS: Part[] = [
   { kind: 'intro', len: 2.6 },
-  { kind: 'play', slide: 0, len: 5.5 },
-  { kind: 'play', slide: 1, len: 5.5 },
-  { kind: 'play', slide: 2, len: 5.5 },
-  { kind: 'play', slide: 3, len: 5.5 },
-  { kind: 'outro', len: 3.2 },
+  { kind: 'menu', len: 4.2 },
+  { kind: 'play', slide: 0, len: 5 },
+  { kind: 'montage', len: 4.4 },
+  { kind: 'play', slide: 2, len: 5 },
+  { kind: 'play', slide: 3, len: 5 },
+  { kind: 'gift', len: 4 },
+  { kind: 'outro', len: 4 },
 ];
 export const PROMO_SECONDS = PARTS.reduce((sum, part) => sum + part.len, 0);
 
-export async function recordPromo(onProgress: (value: number) => void): Promise<Blob> {
+export async function recordPromo(onProgress: (value: number) => void, onStage: (text: string) => void = () => {}): Promise<Blob> {
   const W = 1080, H = 1920;
   const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(type => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type));
   if (!mime) throw new Error('Video recording is not supported in this browser.');
   const icon = await loadIcon();
+
+  onStage('Preparing level previews…');
+  const montage: HTMLCanvasElement[] = [];
+  for (const level of MONTAGE_LEVELS) montage.push(await captureScene({ level, mode: 'aim' }));
+
+  const mock = document.createElement('canvas');
+  mock.width = SCENE_W * 2; mock.height = SCENE_H * 2;
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d')!;
@@ -304,6 +425,7 @@ export async function recordPromo(onProgress: (value: number) => void): Promise<
   recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
   const finished = new Promise<Blob>(resolve => { recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' })); });
 
+  onStage('Recording…');
   await withDpr(2, async () => {
     let live = null as Live | null;
     let liveSlide = -1, lastShot = 0, bombUsed = false;
@@ -316,12 +438,14 @@ export async function recordPromo(onProgress: (value: number) => void): Promise<
         let acc = 0, partIndex = 0;
         while (partIndex < PARTS.length - 1 && t >= acc + PARTS[partIndex].len) { acc += PARTS[partIndex].len; partIndex++; }
         const part = PARTS[partIndex], local = t - acc;
+        if (part.kind !== 'play' && live) { live.dispose(); live = null; liveSlide = -1; }
+
         if (part.kind === 'play') {
-          const slide = SLIDES[part.slide];
+          const slide = SLIDES[part.slide!];
           if (liveSlide !== part.slide) {
             live?.dispose();
             live = mount(slide.scene.level);
-            liveSlide = part.slide; lastShot = performance.now() + 700; bombUsed = false;
+            liveSlide = part.slide!; lastShot = performance.now() + 700; bombUsed = false;
           }
           drawSlide(ctx, W, H, slide, live!.canvas, icon, t);
           const now = performance.now(), e = inside(live!.engine);
@@ -330,11 +454,28 @@ export async function recordPromo(onProgress: (value: number) => void): Promise<
             shootOnce(live!.engine);
             lastShot = now;
           }
+        } else if (part.kind === 'menu') {
+          drawMenuMock(mock, local, t, icon);
+          drawSlide(ctx, W, H, MENU_SLIDE, mock, icon, t);
+        } else if (part.kind === 'gift') {
+          drawGiftMock(mock, local, t, icon);
+          drawSlide(ctx, W, H, GIFT_SLIDE, mock, icon, t);
+        } else if (part.kind === 'montage') {
+          const per = part.len / montage.length;
+          const index = Math.min(montage.length - 1, Math.floor(local / per));
+          const within = (local - index * per) / per;
+          drawSlide(ctx, W, H, MONTAGE_SLIDE, montage[Math.max(0, index - (within < 0.3 ? 1 : 0))], icon, t);
+          if (within < 0.3 && index > 0) {
+            ctx.save(); ctx.globalAlpha = within / 0.3;
+            drawSlide(ctx, W, H, MONTAGE_SLIDE, montage[index], icon, t);
+            ctx.restore();
+          }
+        } else if (part.kind === 'intro') {
+          drawTitleCard(ctx, W, H, local, t, icon, 'Pop & Match');
         } else {
-          if (live) { live.dispose(); live = null; liveSlide = -1; }
-          if (part.kind === 'intro') drawTitleCard(ctx, W, H, local, t, icon, 'Bubble Aura', 'Pop & Match');
-          else drawTitleCard(ctx, W, H, local, t, icon, 'Bubble Aura', 'Pop. Match. Play free!');
+          drawTitleCard(ctx, W, H, local, t, icon, 'Pop. Match. Play free!', ['60 levels', 'Bombs & rainbows', 'Daily gifts']);
         }
+
         const fade = Math.max(0, 1 - local / 0.35, (t - (PROMO_SECONDS - 0.4)) / 0.4);
         if (fade > 0 && t > 0.05) { ctx.fillStyle = `rgba(20,10,50,${Math.min(1, fade)})`; ctx.fillRect(0, 0, W, H); }
         onProgress(t / PROMO_SECONDS);

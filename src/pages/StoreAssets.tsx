@@ -26,6 +26,7 @@ export default function StoreAssets() {
   const [busy, setBusy] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState('');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -119,7 +120,7 @@ export default function StoreAssets() {
     setBusy('video'); setProgress(0);
     if (videoUrl) { URL.revokeObjectURL(videoUrl); setVideoUrl(null); }
     try {
-      const blob = await recordPromo(setProgress);
+      const blob = await recordPromo(setProgress, setStage);
       setVideoUrl(URL.createObjectURL(blob));
       toast.success('Promo video ready.');
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Could not record the video.'); }
@@ -163,8 +164,8 @@ export default function StoreAssets() {
       </section>
 
       <section className="mt-9 rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="video-title">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><h2 id="video-title" className="text-2xl font-black tracking-tight">Promo video · about {Math.round(PROMO_SECONDS)} seconds</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#5b4c8a]">A 1080 × 1920 portrait trailer recorded live from the real game: title card, four gameplay scenes with captions and a closing card. Google Play takes videos as a YouTube link, so upload the file to YouTube (public or unlisted, not age-restricted, ads off) and paste the link. It has no sound; add music you own the rights to in YouTube Studio or a video editor.</p></div><Button className="h-11 gap-2 rounded-xl bg-pink-600 font-bold hover:bg-pink-700" disabled={Boolean(busy)} onClick={makeVideo}>{busy === 'video' ? <Loader2 className="animate-spin" size={16}/> : <Film size={16}/>}{busy === 'video' ? `Recording ${Math.round(progress * 100)}%` : 'Record promo video'}</Button></div>
-        {busy === 'video' && <p className="mt-4 text-sm font-bold text-pink-700">Recording… keep this tab open and visible until it reaches 100%.</p>}
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><h2 id="video-title" className="text-2xl font-black tracking-tight">Promo video · about {Math.round(PROMO_SECONDS)} seconds</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#5b4c8a]">A 1080 × 1920 portrait trailer that combines everything: the animated icon and title, the home screen with the Play button, live gameplay, a montage of different level layouts, combos, a bomb power-up, the daily gift celebration and a closing card. Google Play takes videos as a YouTube link, so upload the file to YouTube (public or unlisted, not age-restricted, ads off) and paste the link. It has no sound; add music you own the rights to in YouTube Studio or a video editor.</p></div><Button className="h-11 gap-2 rounded-xl bg-pink-600 font-bold hover:bg-pink-700" disabled={Boolean(busy)} onClick={makeVideo}>{busy === 'video' ? <Loader2 className="animate-spin" size={16}/> : <Film size={16}/>}{busy === 'video' ? `Recording ${Math.round(progress * 100)}%` : 'Record promo video'}</Button></div>
+        {busy === 'video' && <p className="mt-4 text-sm font-bold text-pink-700">{stage || 'Starting…'} Keep this tab open and visible until it finishes.</p>}
         {videoUrl && <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start"><video src={videoUrl} controls playsInline className="max-h-[520px] rounded-2xl bg-black"/><Button className="h-11 gap-2 rounded-xl bg-purple-600 font-bold hover:bg-purple-700" onClick={async () => { const blob = await (await fetch(videoUrl)).blob(); download(blob, 'Bubble-Aura-promo.webm'); }}><Download size={16}/> Download .webm</Button></div>}
       </section>
 
