@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { initializeAds, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
 import { ADMOB_CONFIG } from '@/config/admob';
-import { Aim, RotateCcw, Trophy } from 'lucide-react';
+import { Crosshair, RotateCcw, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import '@/components/bubble-game.css';
 
@@ -111,7 +111,7 @@ export default function Index() {
       <div className="bubble-stats"><div><small>LEVEL</small><strong>{String(round).padStart(2,'0')}</strong></div><div className="score-pill"><Trophy size={16}/><span>{score.toLocaleString()} <small>POINTS</small></span></div><button className="round-control" onClick={()=>setPaused(!paused)} aria-label={paused?'Resume':'Pause'}>{paused?'▶':'Ⅱ'}</button></div>
       <div className="bubble-instruction">{result?'Lovely round!':paused?'Take a breather':'Match 3 or more bubbles to pop them'}</div>
       <div className="bubble-canvas-wrap"><canvas ref={canvas} onPointerMove={handlePointer} onPointerDown={shoot} aria-label="Aim and tap to shoot bubbles"/></div>
-      <div className="shooter-footer"><div className="next-bubble"><span>UP NEXT</span><i style={{background:colors[next]}}/></div><div className="aim-badge"><Aim size={16}/> TAP TO AIM & POP</div><Button variant="ghost" className="restart-bubble" onClick={()=>void resetRound()} aria-label="Restart level"><RotateCcw size={18}/></Button></div>
+      <div className="shooter-footer"><div className="next-bubble"><span>UP NEXT</span><i style={{background:colors[next]}}/></div><div className="aim-badge"><Crosshair size={16}/> TAP TO AIM & POP</div><Button variant="ghost" className="restart-bubble" onClick={()=>void resetRound()} aria-label="Restart level"><RotateCcw size={18}/></Button></div>
       <div className="ad-dock" aria-hidden="true"><div className="banner-slot"/></div>
       {result&&<div className="bubble-overlay"><div className="result-card"><div className="result-emoji">{result==='win'?'🎉':'🌷'}</div><h2>{result==='win'?'All popped!':'Keep blooming!'}</h2><p>{result==='win'?'You cleared the garden.':'A fresh board is ready when you are.'} {score} points</p><Button className="bubble-primary" onClick={()=>void resetRound(result==='win'?round+1:round,result==='win')}>{result==='win'?'Next level':'Try again'}</Button></div></div>}
       {paused&&!result&&<div className="bubble-overlay"><div className="result-card"><div className="result-emoji">☁️</div><h2>Paused</h2><p>Your bubbles are waiting.</p><Button className="bubble-primary" onClick={()=>setPaused(false)}>Back to popping</Button></div></div>}
