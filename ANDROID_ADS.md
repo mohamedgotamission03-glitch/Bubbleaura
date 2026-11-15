@@ -4,11 +4,11 @@
 
 All runtime and official test IDs are in `src/config/admob.ts`. Production is active (`testMode: false`):
 
-- App: `ca-app-pub-2832761207597793~3278020475`
-- Banner: `ca-app-pub-2832761207597793/4862564888`
+- App: `ca-app-pub-2832761207597793~1236454728`
+- Banner: `ca-app-pub-2832761207597793/1511961908`
 - Interstitial: `ca-app-pub-2832761207597793/8833599488`
-- Standard rewarded: `ca-app-pub-2832761207597793/6453978619`
-- Reward: amount **1**, item **Puzzle revive**.
+- Standard rewarded: `ca-app-pub-2832761207597793/5661804951`
+- Reward: amount **1**, item **Bonus moves**.
 
 Capacitor 8 and `@capacitor-community/admob` 8.2.1 are installed. SDK integration calls the installed native plugin directly; there is no external rewarded bridge to implement or code to paste into the app.
 
