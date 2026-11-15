@@ -1,7 +1,15 @@
-.bubble-game.is-playing .hud-stars svg{color:#aab0df;filter:none}
+.bubble-game.is-playing{--dock:max(104px,calc(var(--safe-bottom) + 92px))}
+.bubble-game.is-playing .bubble-canvas-wrap{inset:0}
+.bubble-game.is-playing .hud-stars svg:not(.lit){color:#aab0df;filter:none}
 .bubble-game.is-playing .hud-stars svg.lit{color:#ffd445;filter:drop-shadow(0 2px 2px #905c18)}
 .bubble-game.is-playing .hud-ammo.low{background:#b8344f;animation:ammo-pulse .7s infinite alternate}
 .bubble-game.is-playing .hud-progress-track i{transition:width .35s ease}
+.bubble-game.is-playing .swap-bubbles,.bubble-game.is-playing .bomb-booster{bottom:calc(var(--dock) - 21px);width:42px;height:42px}
+.bubble-game.is-playing .swap-bubbles{left:calc(50% - 92px)}
+.bomb-booster{position:absolute;z-index:3;left:calc(50% - 142px);display:grid;place-items:center;border:2px solid #ffffffd9;border-radius:50%;background:#e2603a;color:#fff;box-shadow:0 0 14px #ff9a5a99,inset 0 2px 0 #ffffff85;touch-action:manipulation}
+.bomb-booster b{position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;padding:0 4px;border-radius:99px;background:#fff;color:#c2431f;font-size:11px;font-weight:1000;line-height:19px;text-align:center}
+.bomb-booster:active{transform:scale(.92)}
+.bomb-booster:disabled{opacity:.42;box-shadow:none}
 .streak-chip{position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 80px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;background:#ff8a2a;color:#fff;font-size:12px;font-weight:1000;box-shadow:0 3px 0 #b5521a,0 6px 14px #0006;animation:chip-pop .35s both;pointer-events:none}
 .world-block{margin-bottom:6px}
 .world-title{display:flex;align-items:center;gap:8px;margin:12px 0 8px;color:#4b5f7c;font-size:12px;font-weight:1000;letter-spacing:.5px;text-transform:uppercase}
@@ -13,5 +21,28 @@
 .revive-button{margin-bottom:10px;background:#1fae7a;box-shadow:0 5px 0 #14825a}
 .revive-button:hover{background:#19a171}
 .menu-record svg+strong{margin-left:2px}
+.gift-card{display:flex;width:100%;max-width:300px;align-items:center;gap:10px;margin:12px auto 0;padding:10px 14px;border:2px dashed #c9bdf0;border-radius:18px;background:#ffffffa8;color:#5b3fb3;text-align:left}
+.gift-card span{display:flex;flex-direction:column;line-height:1.2}
+.gift-card b{font-size:13px;font-weight:1000}
+.gift-card small{color:#7d6aa8;font-size:11px;font-weight:700}
+.gift-card.ready{border:2px solid #ffb43a;background:#fff3d2;color:#a8570c;box-shadow:0 4px 0 #e6992b;animation:gift-wiggle 1.6s infinite}
+.gift-card.ready small{color:#b8741f}
+.legal-links{display:flex;justify-content:center;gap:18px;margin-top:16px}
+.legal-links a{color:#5b3fb3;font-size:12px;font-weight:800;text-decoration:underline}
+.legal-foot{margin-top:12px;color:#8b82ad;font-size:11px;font-weight:700;line-height:1.5;text-align:center}
+.splash{position:fixed;z-index:100;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:radial-gradient(circle at 50% 35%,#7b5ad8,#2c1d62 70%);color:#fff;animation:splash-out .35s 1.35s forwards}
+.splash-logo{display:grid;width:92px;height:92px;place-items:center;border:3px solid #ffffff80;border-radius:28px;background:linear-gradient(145deg,#ff7aa8,#ffc53d);font-size:48px;box-shadow:0 8px 0 #00000030,0 0 40px #ffc53d66;animation:logo-bounce 1s ease-out both}
+.splash h1{margin:14px 0 0;font-size:32px;font-weight:1000;letter-spacing:.5px;text-shadow:0 3px 0 #2c1d62}
+.splash p{margin:0;color:#d8cdfa;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+.splash-bar{width:140px;height:8px;margin-top:22px;overflow:hidden;border-radius:99px;background:#ffffff30}
+.splash-bar i{display:block;height:100%;border-radius:inherit;background:#8dffd0;animation:splash-load 1.3s ease-out both}
+.bubble-game:not(.is-playing){padding-top:max(0px,env(safe-area-inset-top));padding-bottom:max(0px,env(safe-area-inset-bottom))}
+.settings-screen,.levels-screen{overflow-y:auto}
 @keyframes ammo-pulse{from{transform:scale(1)}to{transform:scale(1.08)}}
 @keyframes chip-pop{from{opacity:0;transform:translateX(-50%) scale(.5)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+@keyframes gift-wiggle{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-2deg)}90%{transform:rotate(2deg)}95%{transform:rotate(-1deg)}}
+@keyframes logo-bounce{0%{transform:scale(.3) rotate(-12deg);opacity:0}60%{transform:scale(1.12) rotate(4deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+@keyframes splash-load{from{width:0}to{width:100%}}
+@keyframes splash-out{to{opacity:0;visibility:hidden}}
+@media(max-width:360px){.bubble-game.is-playing .bomb-booster{left:calc(50% - 134px);width:38px;height:38px}.bubble-game.is-playing .swap-bubbles{left:calc(50% - 88px)}.splash h1{font-size:28px}}
+@media(min-width:600px){.bubble-game.is-playing{max-width:480px}}

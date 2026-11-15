@@ -47,7 +47,12 @@ function paintBubble(g: CanvasRenderingContext2D, x: number, y: number, r: numbe
   g.beginPath(); g.arc(x, y, r * 0.96, 0, Math.PI * 2); g.fillStyle = gradient; g.fill();
   g.lineWidth = 1.2; g.strokeStyle = '#ffffff55'; g.stroke();
   g.beginPath(); g.ellipse(x - r * 0.3, y - r * 0.34, r * 0.22, r * 0.13, -0.5, 0, Math.PI * 2); g.fillStyle = '#ffffffd0'; g.fill();
-  g.beginPath(); g.arc(x + r * 0.24, y + r * 0.3, r * 0.06, 0, Math.PI * 2); g.fillStyle = '#ffffff70'; g.fill();
+  for (const side of [-1, 1]) {
+    g.beginPath(); g.ellipse(x + side * r * 0.27, y + r * 0.1, r * 0.12, r * 0.16, 0, 0, Math.PI * 2); g.fillStyle = '#1b2347'; g.fill();
+    g.beginPath(); g.arc(x + side * r * 0.27 - r * 0.03, y + r * 0.04, r * 0.05, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill();
+    g.beginPath(); g.arc(x + side * r * 0.5, y + r * 0.34, r * 0.1, 0, Math.PI * 2); g.fillStyle = '#ff7a9a55'; g.fill();
+  }
+  g.beginPath(); g.arc(x, y + r * 0.32, r * 0.14, 0.15 * Math.PI, 0.85 * Math.PI); g.strokeStyle = '#1b2347'; g.lineWidth = Math.max(1, r * 0.07); g.lineCap = 'round'; g.stroke();
 }
 
 export class BubbleEngine {
@@ -64,6 +69,7 @@ export class BubbleEngine {
   private falls: Fall[] = [];
   private particles: Particle[] = [];
   private floaters: Floater[] = [];
+  private jiggle = new Map<string, number>();
   private sprites = new Map<string, HTMLCanvasElement>();
   private score = 0;
   private moves: number;
@@ -110,6 +116,14 @@ export class BubbleEngine {
     if (y > this.m.launcherY + this.m.cell * 1.6) return;
     const dir = this.direction(x, y);
     this.shoot(dir.x, dir.y);
+  }
+
+  useBomb() {
+    if (this.locked() || this.current.kind === 'bomb') return false;
+    if (this.next.kind === 'bomb') [this.current, this.next] = [this.next, this.current];
+    else this.current = { kind: 'bomb', color: 0 };
+    playPowerUp(this.opts.sound);
+    return true;
   }
 
   swap() {
@@ -251,6 +265,7 @@ export class BubbleEngine {
       playStick(this.opts.sound);
       this.burst(origin.x, origin.y, colorOf(piece.color), 5, 120);
     }
+    if (cell) neighbors(cell.row, cell.col, this.shift).forEach(([r, c]) => { if (this.grid.has(key(r, c))) this.jiggle.set(key(r, c), this.age); });
     this.afterShot();
   }
 
@@ -288,6 +303,10 @@ export class BubbleEngine {
     this.addFloater(origin.x, origin.y, `+${gained}`, '#fff6b0', 22 + Math.min(10, mult * 2));
     if (this.streak >= 2) this.addFloater(this.m.cx, this.m.top + this.m.cell * 3.2, `Combo x${mult}!`, '#ffd24a', 30 + mult * 2);
     else if (dropped.length >= 3) this.addFloater(this.m.cx, this.m.top + this.m.cell * 3.2, `Big drop! ${dropped.length}`, '#8dffd0', 28);
+    else if (removed.length >= 4) {
+      const words = ['Nice!', 'Sweet!', 'Great!', 'Awesome!', 'Fantastic!'];
+      this.addFloater(this.m.cx, this.m.top + this.m.cell * 3.2, words[Math.min(words.length - 1, removed.length - 4)], '#ffe27a', 28);
+    }
     if (this.streak > 0 && this.streak % 3 === 0) this.grantPower('rainbow');
     this.charge += (removed.length + dropped.length) * 3.2;
     if (this.charge >= 100) { this.charge = 0; this.grantPower('bomb'); }
@@ -333,7 +352,13 @@ export class BubbleEngine {
     this.score += bonus;
     this.result = { won, score: this.score, stars: won ? this.starsFor() : 0, movesLeft: Math.max(0, this.moves), bonus, reason };
     this.endAt = this.age + (won ? 1.1 : 0.8);
-    if (won) playWin(this.opts.sound); else playGameOver(this.opts.sound);
+    if (won) {
+      playWin(this.opts.sound);
+      const palette = [...COLORS, '#ffffff'];
+      for (let i = 0; i < 90; i++) {
+        this.particles.push({ x: Math.random() * this.m.w, y: -10 - Math.random() * 60, vx: (Math.random() - 0.5) * 160, vy: 80 + Math.random() * 260, r: 3 + Math.random() * 3, color: palette[i % palette.length], age: 0, life: 1.6 + Math.random() * 1.2 });
+      }
+    } else playGameOver(this.opts.sound);
   }
 
   private emit() {
@@ -360,12 +385,15 @@ export class BubbleEngine {
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     if (!this.m || this.m.w !== w || this.m.h !== h || this.m.dpr !== dpr) {
       c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
-      const host = c.closest('.bubble-game');
-      const style = host ? getComputedStyle(host) : null;
-      const safeTop = style ? parseFloat(style.getPropertyValue('--safe-top')) || 0 : 0;
-      const safeBottom = style ? parseFloat(style.getPropertyValue('--safe-bottom')) || 0 : 0;
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)';
+      document.body.appendChild(probe);
+      const probeStyle = getComputedStyle(probe);
+      const safeTop = parseFloat(probeStyle.paddingTop) || 0;
+      const safeBottom = parseFloat(probeStyle.paddingBottom) || 0;
+      probe.remove();
       const top = safeTop + 86;
-      const launcherY = h - Math.max(104, safeBottom + 82);
+      const launcherY = h - Math.max(104, safeBottom + 92);
       const cell = Math.max(16, Math.min(44, (w - 16) / (COLS + 0.5), (launcherY - 74 - top) / ((DANGER_ROW - 1) * ROW_GAP + 1)));
       const left = (w - (COLS - 0.5) * cell) / 2;
       this.m = { w, h, dpr, cell, radius: cell / 2, left, top, minX: left, maxX: left + (COLS - 0.5) * cell, cx: w / 2, launcherY };
@@ -461,7 +489,15 @@ export class BubbleEngine {
     ctx.save();
     if (this.shake > 0.01) ctx.translate((Math.random() - 0.5) * this.shake * 9, (Math.random() - 0.5) * this.shake * 9);
     this.drawDanger(time);
-    this.grid.forEach(b => { const p = this.pos(b.row, b.col); this.drawSprite(b.color, p.x, p.y, m.radius); });
+    this.grid.forEach(b => {
+      const p = this.pos(b.row, b.col), j = this.jiggle.get(key(b.row, b.col));
+      let scale = 1;
+      if (j !== undefined) {
+        const t = (this.age - j) / 0.4;
+        if (t >= 1) this.jiggle.delete(key(b.row, b.col)); else scale = 1 + Math.sin(t * Math.PI * 3) * 0.12 * (1 - t);
+      }
+      this.drawSprite(b.color, p.x, p.y, m.radius, 1, scale);
+    });
     this.drawPops();
     this.drawFalls();
     if (this.aimPoint && !this.locked()) this.drawAim();
