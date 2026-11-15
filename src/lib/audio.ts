@@ -310,7 +310,7 @@ export function startMusic() {
   if (musicTimer !== null) return;
   musicGain = ctx.createGain();
   musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-  musicGain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + 1.2);
+  musicGain.gain.linearRampToValueAtTime(0.38, ctx.currentTime + 1.2);
   musicGain.connect(ctx.destination);
   barIndex = 0;
   nextBar = ctx.currentTime + 0.1;
