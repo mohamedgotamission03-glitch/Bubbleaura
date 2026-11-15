@@ -64,12 +64,12 @@ jobs:
           ./gradlew --no-daemon assembleDebug
 
       - name: Name the test APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Cubellio-test-ads.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Bubblora-test-ads.apk
 
       - name: Upload downloadable APK
         uses: actions/upload-artifact@v6
         with:
-          name: Cubellio-test-ads
-          path: Cubellio-test-ads.apk
+          name: Bubblora-test-ads
+          path: Bubblora-test-ads.apk
           if-no-files-found: error
           retention-days: 14
