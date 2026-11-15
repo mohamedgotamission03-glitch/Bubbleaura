@@ -9,7 +9,13 @@ import './bubble-game.css';
 type Bubble = { row: number; col: number; color: number };
 const COLORS = ['#ff668a', '#38c8b4', '#ffc34f', '#9c73f5', '#57a8f5'];
 const ROWS = 9, COLS = 8;
-const makeBoard = (): Bubble[] => Array.from({ length: 5 }, (_, row) => Array.from({ length: COLS - (row % 2), (_, col) => ({ row, col, color: (row + col * 2 + Math.floor(Math.random() * 3)) % COLORS.length }))).flat();
+const makeBoard = (): Bubble[] => Array.from({ length: 5 }, (_, row) =>
+  Array.from({ length: COLS - (row % 2) }, (_, col) => ({
+    row,
+    col,
+    color: (row + col * 2 + Math.floor(Math.random() * 3)) % COLORS.length,
+  })),
+).flat();
 const randomColor = () => Math.floor(Math.random() * COLORS.length);
 
 export default function Index() {
