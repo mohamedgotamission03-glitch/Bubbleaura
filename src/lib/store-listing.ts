@@ -1,36 +1,33 @@
 import { canPlay, Game, newGame, place, Save, SIZE, won } from '@/lib/puzzle';
 
-export const STORE_TITLE = 'Cubellio: Block Puzzle';
-export const SHORT_DESCRIPTION = 'Place colorful blocks, clear lines, and unwind with relaxing puzzle challenges.';
-export const FULL_DESCRIPTION = `Small blocks. Satisfying clears. Your next favorite puzzle break.
+export const STORE_TITLE = 'Bubble Aura: Pop & Match';
+export const SHORT_DESCRIPTION = 'Aim, pop and chain colorful bubbles across 60 levels with bombs and rainbows.';
+export const FULL_DESCRIPTION = `Aim. Pop. Chain. Your next favorite bubble break.
 
-Meet Cubellio, a colorful block puzzle game that turns a little free time into a rewarding challenge. Place shapes on an 8×8 board, fill rows and columns, and make room for your next move. Easy to learn, with plenty of room for clever thinking.
+Bubble Aura: Pop & Match is a colorful bubble shooter made for quick sessions and satisfying combos. Aim, shoot and match bubbles to clear the board before you run out of moves.
 
-PLACE. CLEAR. POP!
-Drag a block onto the board, or tap a piece and then tap a square. Complete a row or column to clear it. Clear several lines in one move for a satisfying score bonus. Every placement matters: blocks cannot be rotated, so planning ahead is part of the fun.
+AIM AND POP
+Line up a shot, match colors and pop whole clusters at once. Drop big groups of bubbles for chain reactions and a higher score.
 
-12 LEVELS TO EXPLORE
-Each level gives you two goals: reach the target score and clear the required number of lines. Complete both to unlock your next challenge, then return to unlocked levels whenever you feel like playing again.
+60 LEVELS TO EXPLORE
+Move through colorful worlds with new layouts and goals. Earn up to three stars on every level and replay any unlocked level to beat your best.
 
-PLAY AT YOUR OWN PACE
-No countdown. No rushing your next move. Enjoy a relaxed puzzle session during a quiet break or settle in and challenge your best score.
+BOMBS AND RAINBOWS
+Light up bombs and rainbow bubbles for explosive combos. Collect a free daily gift to keep a bomb ready for the toughest levels.
 
 LITTLE DETAILS THAT MAKE A DIFFERENCE
-• Bright, colorful blocks and a compact, easy-to-read board.
-• Drag-and-drop or tap-to-place controls.
-• Bonus points for clearing multiple lines at once.
-• One-move undo to rethink your latest placement.
-• Pause and resume your current puzzle.
-• Optional sound and haptic feedback on supported devices.
-• Progress and best score saved locally on your device.
+• Smooth, easy one-thumb aiming.
+• Bright, cheerful bubbles and effects.
+• Optional sound and vibration feedback.
+• Progress and best scores saved locally on your device.
 • No account required.
 
-OUT OF SPACE? YOU HAVE OPTIONS
-Restart and try a new approach. When a rewarded video is available, you can choose to watch it to earn one revive per run, clearing the board while keeping your score and line progress.
+OUT OF MOVES?
+Restart and try a new approach. When a rewarded video is available, you can choose to watch it for bonus moves.
 
-Core puzzle play works offline. Advertising and rewarded videos need an internet connection and may not always be available. Cubellio contains ads. Progress is stored on your device, not in a cloud account.
+Core play works offline. Bubble Aura contains ads (Google AdMob): a banner, occasional full-screen ads between levels, and optional rewarded videos. Ads need an internet connection and may not always be available. Progress is stored on your device, not in a cloud account.
 
-Make a little space for a little fun. Download Cubellio and find your next satisfying clear.`;
+Download Bubble Aura and start popping.`;
 
 function advance(game: Game, moves: number): Game {
   let current = game;

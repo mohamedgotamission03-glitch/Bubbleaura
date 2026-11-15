@@ -46,7 +46,7 @@ This environment has verified the web code/build, not executed the native releas
 These cannot be completed by changing code alone:
 
 - Set up Google Play Console and Samsung Seller Portal publisher accounts and meet their current testing/review requirements.
-- Configure the AdMob app and privacy messages in your own account. The provided rewarded unit must be a standard Rewarded unit with amount **1**, item **Puzzle revive**.
+- Configure the AdMob app and privacy messages in your own account. The provided rewarded unit must be a standard Rewarded unit with amount **1**, item **Bonus moves**. See `STORE_POLICY_CHECKLIST.md` for the full Google Play, AdMob and Galaxy Store policy checklist.
 - Publish a truthful, accessible privacy policy URL identifying your app/developer and reflecting actual SDK behavior. No publisher URL/contact details were supplied, so this project does not invent them or claim that a hosted publisher policy is complete.
 - Complete Google Play **Contains ads**, Data Safety, target audience and content-rating declarations based on the Mobile Ads/UMP SDKs, device-local saves and your actual deployment. An absence of an app account does not mean the advertising SDK collects no data.
 - Complete Samsung advertising, privacy, permissions and rating declarations.

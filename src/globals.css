@@ -141,6 +141,7 @@
 .legal-copy h2 {margin:28px 0 8px;font-size:22px;font-weight:900;color:#1d2a3a;}
 .legal-copy p,.legal-copy li {margin-top:12px;font-size:16px;line-height:1.7;color:#334155;}
 .legal-copy a {color:#2458d6;font-weight:800;text-decoration:underline;}
+.legal-copy ul {margin-top:8px;padding-left:22px;list-style:disc;}
 .legal-back {display:inline-flex;min-height:44px;align-items:center;gap:8px;font-weight:800;color:#2458d6;}
 @media(max-width:340px) { .compact-goal span{gap:3px;}.compact-goal{gap:4px;font-size:10px;}.compact-goal strong{font-size:11px;}.brand-text{font-size:18px;}.game-header{padding-left:12px;padding-right:12px;} }
 @media(prefers-reduced-motion:reduce) {*,*::before,*::after{animation:none!important;transition:none!important;}}
