@@ -1,5 +1,6 @@
 import { BubbleEngine } from './bubble-engine';
 import { COLORS, cluster, key, type Grid } from './bubbles';
+import { audioContext, playLevelStart, playMenu, playPowerUp, playSelect, playWin, startAudioCapture, stopAudioCapture, tone } from './audio';
 
 export const SCENE_W = 400;
 export const SCENE_H = 760;
@@ -45,14 +46,14 @@ async function withDpr<T>(value: number, fn: () => Promise<T>): Promise<T> {
 }
 
 type Live = { engine: BubbleEngine; canvas: HTMLCanvasElement; dispose: () => void };
-function mount(level: number): Live {
+function mount(level: number, sound = false): Live {
   const host = document.createElement('div');
   host.style.cssText = `position:fixed;left:-10000px;top:0;width:${SCENE_W}px;height:${SCENE_H}px;pointer-events:none`;
   const canvas = document.createElement('canvas');
   canvas.style.cssText = 'display:block;width:100%;height:100%';
   host.appendChild(canvas);
   document.body.appendChild(host);
-  const engine = new BubbleEngine(canvas, level, { sound: false, haptics: false }, { onHud: () => {}, onEnd: () => {} });
+  const engine = new BubbleEngine(canvas, level, { sound, haptics: false }, { onHud: () => {}, onEnd: () => {} });
   engine.start();
   return { engine, canvas, dispose: () => { engine.destroy(); host.remove(); } };
 }
@@ -166,7 +167,7 @@ function drawBrandFooter(ctx: CanvasRenderingContext2D, W: number, y: number, u:
   ctx.textAlign = 'center';
 }
 
-export function drawSlide(ctx: CanvasRenderingContext2D, W: number, H: number, slide: Slide, source: CanvasImageSource, icon: HTMLImageElement, t = 0) {
+export function drawSlide(ctx: CanvasRenderingContext2D, W: number, H: number, slide: Slide, source: CanvasImageSource, icon: HTMLImageElement, t = 0, enter = 1) {
   const u = W / 1080;
   drawBackdrop(ctx, W, H, slide, t, u);
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
@@ -187,7 +188,8 @@ export function drawSlide(ctx: CanvasRenderingContext2D, W: number, H: number, s
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowOffsetY = 6 * u;
     ctx.fillStyle = i === slide.title.length - 1 ? slide.accent : '#ffffff';
-    ctx.fillText(line, W / 2, lineY);
+    ctx.globalAlpha = Math.min(1, enter * 1.4);
+    ctx.fillText(line, W / 2, lineY + (1 - enter) * 50 * u);
     ctx.restore();
     lineY += titleSize * 1.08;
   });
@@ -203,6 +205,11 @@ export function drawSlide(ctx: CanvasRenderingContext2D, W: number, H: number, s
   if (frameW > W * 0.84) { frameW = W * 0.84; frameH = (frameW * SCENE_H) / SCENE_W; }
   const x = (W - frameW) / 2, y = top;
   ctx.save();
+  ctx.translate(W / 2, y + frameH / 2);
+  ctx.scale(0.92 + 0.08 * enter, 0.92 + 0.08 * enter);
+  ctx.translate(-W / 2, -(y + frameH / 2));
+  ctx.globalAlpha = Math.min(1, 0.3 + enter);
+  ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 60 * u; ctx.shadowOffsetY = 24 * u;
   roundRect(ctx, x - 12 * u, y - 12 * u, frameW + 24 * u, frameH + 24 * u, 56 * u);
   ctx.fillStyle = '#ffffff'; ctx.fill();
@@ -212,6 +219,7 @@ export function drawSlide(ctx: CanvasRenderingContext2D, W: number, H: number, s
   ctx.drawImage(source, x, y, frameW, frameH);
   ctx.restore();
 
+  ctx.restore();
   drawBrandFooter(ctx, W, H * 0.968, u, icon);
 }
 
@@ -391,6 +399,30 @@ function drawTitleCard(ctx: CanvasRenderingContext2D, W: number, H: number, loca
   });
 }
 
+// A cheerful original loop (C – G – Am – F) built from the game's own synth.
+function scheduleMusic(seconds: number) {
+  const ctx = audioContext();
+  if (!ctx) return;
+  const start = ctx.currentTime + 0.15;
+  const chords = [
+    { bass: 130.81, arp: [523.25, 659.25, 783.99] },
+    { bass: 98, arp: [493.88, 587.33, 783.99] },
+    { bass: 110, arp: [523.25, 659.25, 880] },
+    { bass: 87.31, arp: [523.25, 698.46, 880] },
+  ];
+  const pattern = [0, 1, 2, 1, 0, 1, 2, 1];
+  const bars = Math.ceil(seconds / 2);
+  for (let bar = 0; bar < bars; bar++) {
+    const chord = chords[bar % 4], at = start + bar * 2;
+    const level = Math.max(0.05, Math.min(1, (seconds - bar * 2) / 3));
+    tone(at, chord.bass, 0.9, 0.07 * level, 'triangle');
+    tone(at + 1, chord.bass, 0.9, 0.06 * level, 'triangle');
+    pattern.forEach((index, step) => tone(at + step * 0.25, chord.arp[index], 0.22, 0.045 * level, 'sine'));
+    if (bar % 2 === 0) tone(at, chord.arp[2] * 2, 0.5, 0.02 * level, 'triangle');
+    for (let beat = 0; beat < 4; beat++) tone(at + beat * 0.5, 120, 0.1, 0.07 * level, 'sine', 45);
+  }
+}
+
 type PartKind = 'intro' | 'menu' | 'play' | 'montage' | 'gift' | 'outro';
 type Part = { kind: PartKind; len: number; slide?: number };
 const PARTS: Part[] = [
@@ -407,7 +439,7 @@ export const PROMO_SECONDS = PARTS.reduce((sum, part) => sum + part.len, 0);
 
 export async function recordPromo(onProgress: (value: number) => void, onStage: (text: string) => void = () => {}): Promise<Blob> {
   const W = 1080, H = 1920;
-  const mime = ['video/webm;codecs=vp8', 'video/webm;codecs=vp9', 'video/webm'].find(type => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type));
+  const mime = ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9,opus', 'video/webm'].find(type => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type));
   if (!mime) throw new Error('Video recording is not supported in this browser.');
   const icon = await loadIcon();
 
@@ -423,6 +455,7 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
   // Frames are pushed manually after each draw so none is skipped or duplicated.
   const stream = canvas.captureStream(0);
   const track = stream.getVideoTracks()[0] as MediaStreamTrack & { requestFrame?: () => void };
+  startAudioCapture()?.getAudioTracks().forEach(audioTrack => stream.addTrack(audioTrack));
   let frameCount = 0;
   const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
   const chunks: Blob[] = [];
@@ -433,7 +466,9 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
   await withDpr(2, async () => {
     let live = null as Live | null;
     let liveSlide = -1, lastShot = 0, bombUsed = false;
+    const fired = new Set<string>();
     recorder.start(250);
+    scheduleMusic(PROMO_SECONDS);
     const start = performance.now();
     await new Promise<void>(resolve => {
       const tick = () => {
@@ -443,16 +478,21 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
         let acc = 0, partIndex = 0;
         while (partIndex < PARTS.length - 1 && t >= acc + PARTS[partIndex].len) { acc += PARTS[partIndex].len; partIndex++; }
         const part = PARTS[partIndex], local = t - acc;
+        const enter = 1 - (1 - Math.min(1, local / 0.55)) ** 3;
+        const once = (name: string, play: () => void) => {
+          const id = `${partIndex}:${name}`;
+          if (!fired.has(id)) { fired.add(id); play(); }
+        };
         if (part.kind !== 'play' && live) { live.dispose(); live = null; liveSlide = -1; }
 
         if (part.kind === 'play') {
           const slide = SLIDES[part.slide!];
           if (liveSlide !== part.slide) {
             live?.dispose();
-            live = mount(slide.scene.level);
+            live = mount(slide.scene.level, true);
             liveSlide = part.slide!; lastShot = performance.now() + 700; bombUsed = false;
           }
-          drawSlide(ctx, W, H, slide, live!.canvas, icon, t);
+          drawSlide(ctx, W, H, slide, live!.canvas, icon, t, enter);
           const now = performance.now(), e = inside(live!.engine);
           if (now - lastShot > 850 && e.m && !e.shot && !e.result) {
             if (slide.scene.mode === 'bomb' && !bombUsed && local > 2.2) { live!.engine.useBomb(); bombUsed = true; }
@@ -460,15 +500,20 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
             lastShot = now;
           }
         } else if (part.kind === 'menu') {
+          if (local > 2.6) once('tap', () => playSelect(true));
+          if (local > 3.1) once('go', () => playMenu(true, true));
           drawMenuMock(mock, local, t, icon);
-          drawSlide(ctx, W, H, MENU_SLIDE, mock, icon, t);
+          drawSlide(ctx, W, H, MENU_SLIDE, mock, icon, t, enter);
         } else if (part.kind === 'gift') {
+          if (local > 0.05) once('pop', () => playWin(true));
+          if (local > 0.45) once('chime', () => playPowerUp(true));
           drawGiftMock(mock, local, t, icon);
-          drawSlide(ctx, W, H, GIFT_SLIDE, mock, icon, t);
+          drawSlide(ctx, W, H, GIFT_SLIDE, mock, icon, t, enter);
         } else if (part.kind === 'montage') {
           const per = part.len / montage.length;
           const index = Math.min(montage.length - 1, Math.floor(local / per));
           const within = (local - index * per) / per;
+          once(`flip${index}`, () => playSelect(true));
           drawSlide(ctx, W, H, MONTAGE_SLIDE, montage[Math.max(0, index - (within < 0.3 ? 1 : 0))], icon, t);
           if (within < 0.3 && index > 0) {
             ctx.save(); ctx.globalAlpha = within / 0.3;
@@ -476,8 +521,10 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
             ctx.restore();
           }
         } else if (part.kind === 'intro') {
+          if (local > 0.2) once('start', () => playLevelStart(true));
           drawTitleCard(ctx, W, H, local, t, icon, 'Pop & Match');
         } else {
+          if (local > 0.3) once('end', () => playWin(true));
           drawTitleCard(ctx, W, H, local, t, icon, 'Pop. Match. Play free!', ['60 levels', 'Bombs & rainbows', 'Daily gifts']);
         }
 
@@ -492,6 +539,7 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
     live?.dispose();
     recorder.stop();
   });
+  stopAudioCapture();
   const blob = await finished;
   if (frameCount / PROMO_SECONDS < 10) throw new Error(`Only ${Math.round(frameCount / PROMO_SECONDS)} frames per second were drawn, so the video would stutter. Open this page in a normal Chrome or Edge tab (not the preview panel), keep it in front and try again.`);
   return blob;
