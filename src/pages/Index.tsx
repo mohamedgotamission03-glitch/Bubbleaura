@@ -4,7 +4,7 @@ import { initializeAds, setBannerVisible, showCompletionInterstitial } from '@/l
 import { ADMOB_CONFIG } from '@/config/admob';
 import { Aim, RotateCcw, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import './bubble-game.css';
+import '@/components/bubble-game.css';
 
 type Bubble = { row: number; col: number; color: number };
 const COLORS = ['#ff668a', '#38c8b4', '#ffc34f', '#9c73f5', '#57a8f5'];
