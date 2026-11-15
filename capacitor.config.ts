@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.cubellio4fun.bubblorashooter',
-  appName: 'Bubble Aura',
+  appName: 'Bubbleaura',
   webDir: 'dist',
   android: { backgroundColor: '#2c1d62' },
 };
