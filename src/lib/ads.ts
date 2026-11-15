@@ -52,7 +52,7 @@ export function initializeAds(): Promise<boolean> {
       await AdMob.addListener(BannerAdPluginEvents.FailedToLoad,()=>{
         bannerCreated=false;
         void AdMob.removeBanner().catch(()=>{});
-        document.documentElement.style.setProperty('--ad-banner-height','50px');
+        document.documentElement.style.setProperty('--ad-banner-height','0px');
       });
       if(!consent.canRequestAds)return false;
       allowed=true;

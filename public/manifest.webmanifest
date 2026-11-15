@@ -1,13 +1,13 @@
 {
-  "name": "Cubellio — Block Puzzle",
-  "short_name": "Cubellio",
-  "description": "Place. Clear. Pop! Colorful blocks, satisfying line clears, and bite-sized level challenges.",
+  "name": "Bubblora — Bubble Shooter",
+  "short_name": "Bubblora",
+  "description": "Aim, pop and chain colorful bubbles across 60 levels with bombs, rainbows and big combos.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f5f1fb",
-  "theme_color": "#f5f1fb",
+  "background_color": "#2c1d62",
+  "theme_color": "#2c1d62",
   "icons": [{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
 }

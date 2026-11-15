@@ -20,7 +20,7 @@ const appId=config.match(/\bappId:\s*'([^']+)'/)[1];
 if(!manifest.includes(`android:value="${appId}"`))throw new Error('Production AdMob app ID is missing from the native manifest.');
 let foundActivity=false;
 manifest=manifest.replace(/<activity\b[^>]*>/g,activity=>{
-  if(!/android:name=["'](?:\.MainActivity|com\.cubellio4fun\.blockpuzzle\.MainActivity)["']/.test(activity))return activity;
+  if(!/android:name=["'](?:\.MainActivity|com\.cubellio4fun\.bubblorashooter\.MainActivity)["']/.test(activity))return activity;
   foundActivity=true;
   return /android:screenOrientation=["'][^"']*["']/.test(activity)
     ?activity.replace(/android:screenOrientation=["'][^"']*["']/,'android:screenOrientation="portrait"')
