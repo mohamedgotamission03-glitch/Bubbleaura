@@ -164,6 +164,70 @@ export function playRevive(enabled: boolean) {
   sparkle(now + 0.12, 0.15, 0.2);
 }
 
+export function playShoot(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  tone(now, 320, 0.09, 0.09, 'sine', 700);
+  tone(now + 0.02, 900, 0.05, 0.03, 'triangle', 1200);
+}
+
+export function playStick(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  tone(now, 230, 0.07, 0.09, 'sine', 150);
+}
+
+const POP_SCALE = [523, 587, 659, 784, 880, 1046, 1175, 1318];
+
+export function playBubblePop(enabled: boolean, count: number, streak = 1) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const base = POP_SCALE[Math.min(Math.max(streak, 1), POP_SCALE.length) - 1];
+  const pops = Math.min(count, 5);
+  for (let i = 0; i < pops; i++) {
+    const note = base * (1 + i * 0.12);
+    tone(now + i * 0.04, note, 0.1, 0.13, 'sine', note * 0.55);
+    tone(now + i * 0.04, note * 2, 0.05, 0.04, 'triangle', note * 1.5);
+  }
+  if (count >= 6) sparkle(now + 0.05, 0.12, 0.2);
+}
+
+export function playDrop(enabled: boolean, count: number) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  tone(now, 720, 0.28, 0.1, 'triangle', 180);
+  if (count >= 4) tone(now + 0.08, 960, 0.26, 0.07, 'sine', 240);
+}
+
+export function playBomb(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  tone(now, 170, 0.4, 0.26, 'sawtooth', 38);
+  tone(now, 90, 0.35, 0.2, 'sine', 40);
+  sparkle(now, 0.16, 0.3);
+}
+
+export function playPowerUp(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [523, 659, 784, 1046].forEach((note, index) => tone(now + index * 0.05, note, 0.14, 0.09, 'triangle'));
+  sparkle(now + 0.1, 0.1, 0.16);
+}
+
+export function playDescend(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  tone(now, 150, 0.22, 0.14, 'sawtooth', 70);
+  tone(now + 0.1, 130, 0.2, 0.1, 'sawtooth', 60);
+}
+
 export function stopAudio() {
   if (context?.state === 'running') void context.suspend();
 }
