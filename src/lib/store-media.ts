@@ -407,7 +407,7 @@ export const PROMO_SECONDS = PARTS.reduce((sum, part) => sum + part.len, 0);
 
 export async function recordPromo(onProgress: (value: number) => void, onStage: (text: string) => void = () => {}): Promise<Blob> {
   const W = 1080, H = 1920;
-  const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(type => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type));
+  const mime = ['video/webm;codecs=vp8', 'video/webm;codecs=vp9', 'video/webm'].find(type => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type));
   if (!mime) throw new Error('Video recording is not supported in this browser.');
   const icon = await loadIcon();
 
@@ -420,7 +420,11 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d')!;
-  const recorder = new MediaRecorder(canvas.captureStream(30), { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+  // Frames are pushed manually after each draw so none is skipped or duplicated.
+  const stream = canvas.captureStream(0);
+  const track = stream.getVideoTracks()[0] as MediaStreamTrack & { requestFrame?: () => void };
+  let frameCount = 0;
+  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
   const chunks: Blob[] = [];
   recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
   const finished = new Promise<Blob>(resolve => { recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' })); });
@@ -435,6 +439,7 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
       const tick = () => {
         const t = (performance.now() - start) / 1000;
         if (t >= PROMO_SECONDS) { resolve(); return; }
+        requestAnimationFrame(tick);
         let acc = 0, partIndex = 0;
         while (partIndex < PARTS.length - 1 && t >= acc + PARTS[partIndex].len) { acc += PARTS[partIndex].len; partIndex++; }
         const part = PARTS[partIndex], local = t - acc;
@@ -479,12 +484,15 @@ export async function recordPromo(onProgress: (value: number) => void, onStage: 
         const fade = Math.max(0, 1 - local / 0.35, (t - (PROMO_SECONDS - 0.4)) / 0.4);
         if (fade > 0 && t > 0.05) { ctx.fillStyle = `rgba(20,10,50,${Math.min(1, fade)})`; ctx.fillRect(0, 0, W, H); }
         onProgress(t / PROMO_SECONDS);
-        requestAnimationFrame(tick);
+        track.requestFrame?.();
+        frameCount += 1;
       };
       tick();
     });
     live?.dispose();
     recorder.stop();
   });
-  return finished;
+  const blob = await finished;
+  if (frameCount / PROMO_SECONDS < 10) throw new Error(`Only ${Math.round(frameCount / PROMO_SECONDS)} frames per second were drawn, so the video would stutter. Open this page in a normal Chrome or Edge tab (not the preview panel), keep it in front and try again.`);
+  return blob;
 }
