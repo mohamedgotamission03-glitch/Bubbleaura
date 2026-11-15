@@ -4,8 +4,8 @@ import { initializeAds, requestRewardedAd, rewardedAdsAvailable, setBannerVisibl
 import { ADMOB_CONFIG } from '@/config/admob';
 import { BubbleEngine, EndInfo, Hud } from '@/lib/bubble-engine';
 import { MAX_LEVEL, WORLDS } from '@/lib/bubbles';
-import { unlockAudio } from '@/lib/audio';
-import { ArrowLeft, ArrowLeftRight, Bomb, ChevronRight, Flame, Gift, LayoutGrid, Pause, Play, RotateCcw, Settings2, Star, Trophy, Volume2, VolumeX } from 'lucide-react';
+import { startMusic, stopMusic, unlockAudio } from '@/lib/audio';
+import { ArrowLeft, ArrowLeftRight, Bomb, ChevronRight, Flame, Gift, LayoutGrid, Music, Pause, Play, RotateCcw, Settings2, Star, Trophy, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -17,9 +17,9 @@ import '@/components/bubble-game-responsive.css';
 import '@/components/bubble-game-polish.css';
 
 type Screen = 'menu' | 'game' | 'levels' | 'settings';
-type Save = { unlocked: number; best: number[]; stars: number[]; sound: boolean; runs: number; bombs: number; gift: string; giftStreak: number };
+type Save = { unlocked: number; best: number[]; stars: number[]; sound: boolean; music: boolean; runs: number; bombs: number; gift: string; giftStreak: number };
 const SAVE_KEY = 'pop-garden-save-v1';
-const freshSave = (): Save => ({ unlocked: 1, best: [], stars: [], sound: true, runs: 0, bombs: 1, gift: '', giftStreak: 0 });
+const freshSave = (): Save => ({ unlocked: 1, best: [], stars: [], sound: true, music: true, runs: 0, bombs: 1, gift: '', giftStreak: 0 });
 const dayStamp = (offset = 0) => { const d = new Date(Date.now() + offset * 864e5); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 const idleHud: Hud = { score: 0, moves: 0, moveLimit: 1, progress: 0, stars: 3, streak: 0, charge: 0 };
 
@@ -76,6 +76,20 @@ export default function Index() {
     return () => setBannerVisible(false);
   }, []);
   useEffect(() => { setBannerVisible(!splash); }, [splash]);
+  useEffect(() => {
+    if (!save.music) { stopMusic(); return; }
+    startMusic();
+    const events = ['pointerup', 'touchend', 'keydown'] as const;
+    const unlock = () => { startMusic(); events.forEach(name => window.removeEventListener(name, unlock)); };
+    events.forEach(name => window.addEventListener(name, unlock));
+    const visibility = () => { if (document.hidden) stopMusic(); else startMusic(); };
+    document.addEventListener('visibilitychange', visibility);
+    return () => {
+      events.forEach(name => window.removeEventListener(name, unlock));
+      document.removeEventListener('visibilitychange', visibility);
+      stopMusic();
+    };
+  }, [save.music]);
 
   const handleEnd = useCallback((info: EndInfo) => {
     setEnd(info);
@@ -156,7 +170,7 @@ export default function Index() {
       <header className="bubble-header"><button className="bubble-brand" onClick={() => setScreen('menu')} aria-label="Main menu"><img src="/icon.svg" alt="" className="h-9 w-9 shrink-0 rounded-xl" /><span><b>Bubble Aura</b><small>Pop &amp; Match</small></span></button><button className="round-control" onClick={() => setScreen('settings')} aria-label="Settings"><Settings2 size={19} /></button></header>
       {screen === 'menu' && <div className="menu-screen menu-hub"><div className="hub-stats"><span className="hub-chip"><Trophy size={15} />{highScore.toLocaleString()}</span><span className="hub-chip"><Star size={15} fill="currentColor" />{totalStars}</span><span className="hub-chip"><Bomb size={15} />{save.bombs}</span></div><div className="menu-art"><div className="art-bubble bubble-a" /><div className="art-bubble bubble-b" /><div className="art-bubble bubble-c" /><div className="art-bubble bubble-d" /><div className="hub-title"><b>Bubble</b><b>Aura</b><small>Pop &amp; Match</small></div></div><div className="hub-actions"><Button className="bubble-primary hub-play" onClick={() => startLevel(save.unlocked)}><Play size={22} fill="currentColor" /><span>{save.unlocked > 1 ? 'Continue' : 'Play'}</span><small>Level {save.unlocked}</small></Button><div className="hub-tiles"><button className="hub-tile" onClick={() => setScreen('levels')}><LayoutGrid size={22} /><b>Levels</b><small>{MAX_LEVEL} to play</small></button>{giftReady ? <button className="hub-tile ready" onClick={claimGift}><Gift size={22} /><b>Daily gift</b><small>+{nextAmount} {nextAmount === 1 ? 'bomb' : 'bombs'}!</small></button> : <div className="hub-tile done"><Gift size={22} /><b>Day {save.giftStreak}</b><small>Gift tomorrow</small></div>}</div></div></div>}
       {screen === 'levels' && <div className="levels-screen"><button className="back-link" onClick={() => setScreen('menu')}><ArrowLeft size={17} /> Main menu</button><h2>Choose a level</h2><p>{totalStars} ★ collected across {WORLDS.length} worlds.</p>{WORLDS.map((world, w) => <div key={world.name} className="world-block"><h3 className="world-title"><i style={{ background: world.top }} />{world.name}</h3><div className="levels-grid">{Array.from({ length: 10 }, (_, i) => w * 10 + i + 1).map(n => <button key={n} className={`level-tile-bubble ${n === save.unlocked ? 'current' : ''}`} disabled={n > save.unlocked} onClick={() => startLevel(n)}><span>{n > save.unlocked ? '🔒' : n}</span><small>{'★'.repeat(save.stars[n - 1] || 0) || ' '}</small></button>)}</div></div>)}</div>}
-      {screen === 'settings' && <div className="settings-screen"><button className="back-link" onClick={() => setScreen('menu')}><ArrowLeft size={17} /> Main menu</button><h2>Settings</h2><p>Make the game feel like yours.</p><button className="setting-toggle" onClick={() => setSave(prev => ({ ...prev, sound: !prev.sound }))}><span>{save.sound ? <Volume2 size={19} /> : <VolumeX size={19} />} Sound effects</span><strong>{save.sound ? 'ON' : 'OFF'}</strong></button><div className="offline-note">✦ Your progress is saved on this device and works offline.</div><AdPrivacyControls /><div className="legal-links"><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms of Use</Link></div><p className="legal-foot">Bubble Aura v1.0 · © {new Date().getFullYear()} Cubellio4Fun<br />Made with care for happy breaks.</p></div>}
+      {screen === 'settings' && <div className="settings-screen"><button className="back-link" onClick={() => setScreen('menu')}><ArrowLeft size={17} /> Main menu</button><h2>Settings</h2><p>Make the game feel like yours.</p><button className="setting-toggle" onClick={() => setSave(prev => ({ ...prev, sound: !prev.sound }))}><span>{save.sound ? <Volume2 size={19} /> : <VolumeX size={19} />} Sound effects</span><strong>{save.sound ? 'ON' : 'OFF'}</strong></button><button className="setting-toggle" onClick={() => setSave(prev => ({ ...prev, music: !prev.music }))}><span><Music size={19} /> Background music</span><strong>{save.music ? 'ON' : 'OFF'}</strong></button><div className="offline-note">✦ Your progress is saved on this device and works offline.</div><AdPrivacyControls /><div className="legal-links"><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms of Use</Link></div><p className="legal-foot">Bubble Aura v1.0 · © {new Date().getFullYear()} Cubellio4Fun<br />Made with care for happy breaks.</p></div>}
       {screen === 'game' && <>
         <div className="play-hud">
           <div className="hud-level">LEVEL {level}</div>

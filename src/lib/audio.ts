@@ -232,3 +232,90 @@ export function stopAudio() {
   if (context?.state === 'running') void context.suspend();
 }
 
+// Background music: a bright, looping 8-bar tune (C – G – Am – F – C – G – F – G) made from simple synth notes.
+const BAR = 2;
+const N = { B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, B5: 987.77, C6: 1046.5, D6: 1174.66 };
+const CHORDS = {
+  C: { bass: 130.81, pad: [261.63, 329.63, 392] },
+  G: { bass: 98, pad: [246.94, 293.66, 392] },
+  Am: { bass: 110, pad: [261.63, 329.63, 440] },
+  F: { bass: 87.31, pad: [261.63, 349.23, 440] },
+};
+const SONG: { chord: keyof typeof CHORDS; melody: number[] }[] = [
+  { chord: 'C', melody: [N.E5, 0, N.G5, 0, N.C6, 0, N.G5, N.E5] },
+  { chord: 'G', melody: [N.D5, 0, N.G5, 0, N.A5, 0, N.G5, N.D5] },
+  { chord: 'Am', melody: [N.E5, 0, N.A5, 0, N.C6, 0, N.A5, N.E5] },
+  { chord: 'F', melody: [N.F5, 0, N.A5, 0, N.C6, 0, N.A5, N.F5] },
+  { chord: 'C', melody: [N.G5, 0, N.E5, 0, N.C6, 0, N.E5, N.G5] },
+  { chord: 'G', melody: [N.D5, 0, N.G5, 0, N.B5, 0, N.G5, N.D5] },
+  { chord: 'F', melody: [N.A5, 0, N.F5, 0, N.C6, 0, N.F5, N.A5] },
+  { chord: 'G', melody: [N.G5, 0, N.B5, 0, N.D6, 0, N.B5, N.G5] },
+];
+let musicGain: GainNode | null = null;
+let musicTimer: number | null = null;
+let nextBar = 0;
+let barIndex = 0;
+
+function note(at: number, freq: number, length: number, volume: number, type: OscillatorType = 'sine', attack = 0.012) {
+  const ctx = audio();
+  if (!ctx || !musicGain) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, at);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(volume, at + attack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+  osc.connect(gain);
+  gain.connect(musicGain);
+  osc.start(at);
+  osc.stop(at + length + 0.02);
+}
+
+function playBar(at: number, index: number) {
+  const bar = SONG[index % SONG.length];
+  const chord = CHORDS[bar.chord];
+  note(at, chord.bass, 0.9, 0.09, 'triangle');
+  note(at + 1, chord.bass, 0.9, 0.07, 'triangle');
+  chord.pad.forEach(freq => note(at, freq, 1.9, 0.02, 'sine', 0.25));
+  for (let beat = 0; beat < 4; beat++) note(at + beat * 0.5, 90, 0.09, 0.05, 'sine');
+  bar.melody.forEach((freq, step) => { if (freq) note(at + step * 0.25, freq, 0.24, 0.05, 'triangle'); });
+}
+
+function scheduleMusic() {
+  const ctx = audio();
+  if (!ctx || !musicGain) return;
+  if (ctx.state !== 'running') { nextBar = ctx.currentTime + 0.1; return; }
+  while (nextBar < ctx.currentTime + 1.6) { playBar(nextBar, barIndex++); nextBar += BAR; }
+}
+
+export function startMusic() {
+  const ctx = audio();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') void ctx.resume();
+  if (musicTimer !== null) return;
+  musicGain = ctx.createGain();
+  musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  musicGain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + 1.2);
+  musicGain.connect(ctx.destination);
+  barIndex = 0;
+  nextBar = ctx.currentTime + 0.1;
+  musicTimer = window.setInterval(scheduleMusic, 400);
+  scheduleMusic();
+}
+
+export function stopMusic() {
+  const ctx = audio();
+  if (!ctx || musicTimer === null) return;
+  window.clearInterval(musicTimer);
+  musicTimer = null;
+  const gain = musicGain;
+  musicGain = null;
+  if (gain) {
+    gain.gain.cancelScheduledValues(ctx.currentTime);
+    gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+    window.setTimeout(() => gain.disconnect(), 700);
+  }
+}
+
