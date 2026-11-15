@@ -70,7 +70,7 @@ export default function Index() {
     void initializeAds();
     return () => setBannerVisible(false);
   }, []);
-  useEffect(() => { setBannerVisible(screen !== 'game' && !splash); }, [screen, splash]);
+  useEffect(() => { setBannerVisible(!splash); }, [splash]);
 
   const handleEnd = useCallback((info: EndInfo) => {
     setEnd(info);

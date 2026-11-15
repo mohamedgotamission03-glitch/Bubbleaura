@@ -1,10 +1,10 @@
 .bubble-game.is-playing{--dock:max(104px,calc(var(--safe-bottom) + 92px))}
-.bubble-game.is-playing .bubble-canvas-wrap{inset:0}
+.bubble-game.is-playing .bubble-canvas-wrap{inset:0 0 var(--ad-banner-height,0px)}
 .bubble-game.is-playing .hud-stars svg:not(.lit){color:#aab0df;filter:none}
 .bubble-game.is-playing .hud-stars svg.lit{color:#ffd445;filter:drop-shadow(0 2px 2px #905c18)}
 .bubble-game.is-playing .hud-ammo.low{background:#b8344f;animation:ammo-pulse .7s infinite alternate}
 .bubble-game.is-playing .hud-progress-track i{transition:width .35s ease}
-.bubble-game.is-playing .swap-bubbles,.bubble-game.is-playing .bomb-booster{bottom:calc(var(--dock) - 21px);width:42px;height:42px}
+.bubble-game.is-playing .swap-bubbles,.bubble-game.is-playing .bomb-booster{bottom:calc(var(--dock) + var(--ad-banner-height,0px) - 21px);width:42px;height:42px}
 .bubble-game.is-playing .swap-bubbles{left:calc(50% - 92px)}
 .bomb-booster{position:absolute;z-index:3;left:calc(50% - 142px);display:grid;place-items:center;border:2px solid #ffffffd9;border-radius:50%;background:#e2603a;color:#fff;box-shadow:0 0 14px #ff9a5a99,inset 0 2px 0 #ffffff85;touch-action:manipulation}
 .bomb-booster b{position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;padding:0 4px;border-radius:99px;background:#fff;color:#c2431f;font-size:11px;font-weight:1000;line-height:19px;text-align:center}
