@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { initializeAds, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
 import { ADMOB_CONFIG } from '@/config/admob';
-import { ArrowLeft, ChevronRight, Crosshair, Pause, Play, RotateCcw, Settings2, Star, Trophy, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Pause, Play, RotateCcw, Settings2, Star, Trophy, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import '@/components/bubble-game.css';
+import '@/components/bubble-game-reference.css';
 
 type Bubble = { row: number; col: number; color: number };
 type Screen = 'menu' | 'game' | 'levels' | 'settings' | 'won' | 'lost';
-const COLORS = ['#ff668a', '#38c8b4', '#ffc34f', '#9c73f5', '#57a8f5', '#ff8d45'];
+const COLORS = ['#ffc83d', '#327fff', '#f0443f', '#26c9d4', '#9b58f4', '#56d88f'];
 const MAX_LEVEL = 60, COLS = 9, ROW_GAP = Math.sqrt(3) / 2;
 const SAVE_KEY = 'pop-garden-save-v1';
 type Save = { unlocked: number; best: number[]; stars: number[]; sound: boolean };
@@ -108,7 +109,7 @@ export default function Index() {
     const width = c.clientWidth, height = c.clientHeight;
     const cell = Math.min((width - 24) / (COLS + .5), 42);
     const radius = cell * .47;
-    return { width, height, cell, radius, left: (width - (COLS + .5) * cell) / 2 + radius, top: 25, launcherX: width / 2, launcherY: height - 44 };
+    return { width, height, cell, radius, left: (width - (COLS + .5) * cell) / 2 + radius, top: 90, launcherX: width / 2, launcherY: height - 94 };
   }, []);
 
   useEffect(() => {
@@ -133,7 +134,7 @@ export default function Index() {
       };
       boardRef.current.forEach(b => { const p=point(b.row,b.col); drawBubble(p.x,p.y,b.color); });
       if (screen === 'game' && !paused) {
-        const origin={x:m.launcherX,y:m.launcherY};
+        const origin={x:m.launcherX,y:m.launcherY-44};
         const a=aimRef.current;
         if (a && !shotRef.current) {
           let dx=a.x-origin.x,dy=a.y-origin.y; if(dy>-m.height*.08)dy=-m.height*.08;
@@ -163,7 +164,12 @@ export default function Index() {
             else if(shotsRef.current>=shotLimit)completeLevel(false,total);
           } else drawBubble(s.x,s.y,s.color);
         }
-        if(!shotRef.current)drawBubble(origin.x,origin.y,current,m.radius*1.05);
+        if(!shotRef.current){
+          const ringY=m.launcherY;
+          ctx.beginPath();ctx.arc(m.launcherX,ringY,43,0,Math.PI*2);ctx.strokeStyle='#ffffff';ctx.lineWidth=6;ctx.shadowColor='#ffffffb8';ctx.shadowBlur=16;ctx.stroke();ctx.shadowBlur=0;
+          ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='900 27px Nunito, sans-serif';ctx.lineWidth=4;ctx.strokeStyle='#4032a7';ctx.strokeText(String(Math.max(0,shotLimit-shots)),m.launcherX,ringY+1);ctx.fillStyle='#ffffff';ctx.fillText(String(Math.max(0,shotLimit-shots)),m.launcherX,ringY+1);
+          drawBubble(origin.x,origin.y,current,m.radius*1.08);drawBubble(m.launcherX+52,ringY,next,m.radius*.9);
+        }
         const now=time;const elapsed=Math.min(32,now-(previous||now));previous=now;
         particles.current=particles.current.filter(p=>p.life>0);
         particles.current.forEach(p=>{p.x+=p.vx*elapsed/16;p.y+=p.vy*elapsed/16;p.vy+=.12;p.life-=elapsed/500;ctx.globalAlpha=Math.max(0,p.life);ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();});ctx.globalAlpha=1;
@@ -188,7 +194,7 @@ export default function Index() {
     const rect=event.currentTarget.getBoundingClientRect(),target={x:event.clientX-rect.left,y:event.clientY-rect.top},m=metrics();lastPointer.current=null;
     if(!m)return;
     let dx=target.x-m.launcherX,dy=target.y-m.launcherY;if(dy>-24)dy=-24;
-    const length=Math.hypot(dx,dy)||1;shotRef.current={x:m.launcherX,y:m.launcherY,vx:dx/length,vy:dy/length,color:current};
+    const length=Math.hypot(dx,dy)||1;shotRef.current={x:m.launcherX,y:m.launcherY-44,vx:dx/length,vy:dy/length,color:current};
     activeShot.current=true;shotsRef.current+=1;setShots(shotsRef.current);setCurrent(next);setNext(randColor(level));setAim(null);
   }
 
@@ -206,7 +212,7 @@ export default function Index() {
       {screen==='menu'&&<div className="menu-screen"><div className="menu-art"><span className="art-leaf leaf-one">✿</span><span className="art-leaf leaf-two">✿</span><div className="art-bubble bubble-a"/><div className="art-bubble bubble-b"/><div className="art-bubble bubble-c"/><div className="art-bubble bubble-d"/><div className="art-launcher">✦</div></div><p className="menu-kicker">A little pop of happiness</p><h1>Ready, aim,<br/><em>let joy bloom.</em></h1><p className="menu-copy">Match colors, clear the board,<br/>and enjoy a moment of calm.</p><Button className="bubble-primary" onClick={()=>startLevel(save.unlocked)}><Play size={18} fill="currentColor"/> Play now</Button><Button variant="ghost" className="menu-level-button" onClick={()=>setScreen('levels')}>Choose a level <ChevronRight size={17}/></Button><div className="menu-record"><Trophy size={16}/><span>BEST SCORE</span><strong>{highScore.toLocaleString()}</strong></div></div>}
       {screen==='levels'&&<div className="levels-screen"><button className="back-link" onClick={()=>setScreen('menu')}><ArrowLeft size={17}/> Main menu</button><h2>Choose a level</h2><p>Every level is a fresh little challenge.</p><div className="levels-grid">{Array.from({length:MAX_LEVEL},(_,index)=>index+1).map(n=><button key={n} className={`level-tile-bubble ${n===level?'current':''}`} disabled={n>save.unlocked} onClick={()=>startLevel(n)}><span>{n>save.unlocked?'🔒':n}</span><small>{'★'.repeat(save.stars[n-1]||0)||' '}</small></button>)}</div></div>}
       {screen==='settings'&&<div className="settings-screen"><button className="back-link" onClick={()=>setScreen('menu')}><ArrowLeft size={17}/> Main menu</button><h2>Settings</h2><p>Make the garden feel like yours.</p><button className="setting-toggle" onClick={()=>setSave(prev=>({...prev,sound:!prev.sound}))}><span>{save.sound?<Volume2 size={19}/>:<VolumeX size={19}/>} Sound effects</span><strong>{save.sound?'ON':'OFF'}</strong></button><div className="offline-note">✦ Your progress is saved on this device and works offline.</div></div>}
-      {screen==='game'&&<><div className="play-hud"><div><small>LEVEL</small><strong>{String(level).padStart(2,'0')}</strong></div><div className="score-pill"><Trophy size={16}/><span>{score.toLocaleString()}<small> SCORE</small></span></div><div className="shots-pill"><small>SHOTS</small><strong>{Math.max(0,shotLimit-shots)}</strong></div></div><div className="bubble-canvas-wrap"><canvas ref={canvas} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={()=>{lastPointer.current=null;setAim(null);}} aria-label="Drag to aim and release to shoot"/></div><div className="shooter-footer"><div className="next-bubble"><span>NEXT</span><i style={{background:COLORS[next]}}/></div><div className="aim-badge"><Crosshair size={16}/> DRAG TO AIM · RELEASE TO SHOOT</div><button className="restart-bubble" onClick={restart} aria-label="Restart level"><RotateCcw size={18}/></button></div><div className="ad-dock" aria-hidden="true"><div className="banner-slot"/></div>{paused&&<div className="bubble-overlay"><div className="result-card"><span className="modal-icon">☁️</span><h2>Paused</h2><p>Your bubbles are right where you left them.</p><Button className="bubble-primary" onClick={()=>setPaused(false)}><Play size={17} fill="currentColor"/> Keep playing</Button><Button variant="ghost" className="quiet-button" onClick={()=>setScreen('menu')}>Leave level</Button></div></div>}</>}
+      {screen==='game'&&<><div className="play-hud"><div className="hud-level">LEVEL {level}</div><div className="hud-progress"><div className="hud-progress-track"><i style={{width:`${Math.min(100,Math.max(8,score/(level*500)*100))}%`}}/></div><div className="hud-stars"><Star size={19} fill="currentColor"/><Star size={19} fill="currentColor"/><Star size={19}/></div></div><div className="hud-score">{score.toLocaleString()}</div><div className="hud-ammo"><span className="ammo-bubbles"><i/><i/><i/></span><b>{Math.max(0,shotLimit-shots)}</b></div><button className="hud-settings" onClick={()=>setPaused(true)} aria-label="Pause game"><Settings2 size={24}/></button></div><div className="bubble-canvas-wrap"><canvas ref={canvas} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={()=>{lastPointer.current=null;setAim(null);}} aria-label="Drag to aim and release to shoot"/></div><div className="ad-dock" aria-hidden="true"><div className="banner-slot"/></div>{paused&&<div className="bubble-overlay"><div className="result-card"><span className="modal-icon">☁️</span><h2>Paused</h2><p>Your bubbles are right where you left them.</p><Button className="bubble-primary" onClick={()=>setPaused(false)}><Play size={17} fill="currentColor"/> Keep playing</Button><Button variant="ghost" className="quiet-button" onClick={()=>setScreen('menu')}>Leave level</Button></div></div>}</>}
       {screen==='won'&&<div className="result-screen"><span className="result-emoji">🎉</span><p className="result-kicker">LEVEL {String(level).padStart(2,'0')} COMPLETE</p><h2>Beautifully done!</h2><div className="star-row">{[1,2,3].map(n=><Star key={n} size={34} fill={n<=earnedStars?'currentColor':'transparent'} className={n<=earnedStars?'earned':''}/>)}</div><div className="result-score"><small>YOUR SCORE</small><strong>{bestThisRun.toLocaleString()}</strong></div><Button className="bubble-primary" onClick={()=>void continueLevel()}>Next level <ChevronRight size={18}/></Button><Button variant="ghost" className="quiet-button" onClick={()=>setScreen('levels')}>Level selection</Button></div>}
       {screen==='lost'&&<div className="result-screen"><span className="result-emoji">🌱</span><p className="result-kicker">ONE MORE TRY?</p><h2>Keep going, you’ve got this.</h2><p className="result-description">A fresh shot at this level is ready.</p><Button className="bubble-primary" onClick={restart}><RotateCcw size={17}/> Retry level</Button><Button variant="ghost" className="quiet-button" onClick={()=>setScreen('levels')}>Level selection</Button></div>}
     </section>
