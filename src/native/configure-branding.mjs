@@ -37,6 +37,7 @@ export function configureNativeBranding() {
     writeFileSync(`${resources}/mipmap-anydpi/${icon}.xml`, vector(paths));
     writeFileSync(`${resources}/mipmap-anydpi-v26/${icon}.xml`, adaptive);
   }
-  writeFileSync(`${resources}/values/blockpop_icon.xml`, '<resources><color name="blockpop_icon_background">#7c3aed</color></resources>\n');
+  const backgroundFill = paths.find(path => path.background)?.fill ?? '#4cb5e6';
+  writeFileSync(`${resources}/values/blockpop_icon.xml`, `<resources><color name="blockpop_icon_background">${backgroundFill}</color></resources>\n`);
   console.log(`Configured ${name} native label and launcher icons.`);
 }
