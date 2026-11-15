@@ -144,7 +144,7 @@ export default function Index() {
   const canRevive = Boolean(end && !end.won && !revived && rewardedAdsAvailable());
   const movesLow = hud.moves <= 3;
 
-  return <main className="bubble-app">
+  return <main className={`bubble-app ${screen === 'game' ? '' : 'menu-app'}`}>
     {splash && <div className="splash" aria-hidden="true"><img src="/icon.svg" alt="" className="splash-logo" /><h1>Bubble Aura</h1><p>Pop &amp; Match</p><div className="splash-bar"><i /></div></div>}
     <section className={`bubble-game ${screen === 'game' ? 'is-playing' : ''}`} aria-label="Bubble Aura: Pop and Match">
       <header className="bubble-header"><button className="bubble-brand" onClick={() => setScreen('menu')} aria-label="Main menu"><img src="/icon.svg" alt="" className="h-9 w-9 shrink-0 rounded-xl" /><span><b>Bubble Aura</b><small>Pop &amp; Match</small></span></button><button className="round-control" onClick={() => setScreen('settings')} aria-label="Settings"><Settings2 size={19} /></button></header>
