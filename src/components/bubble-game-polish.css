@@ -72,7 +72,12 @@
 .hub-tile.ready svg{color:#f08a1c}
 .hub-tile.ready small{color:#b8741f}
 .hub-tile.done{background:#ffffff99;box-shadow:none;opacity:.85}
-@media(max-width:520px){main.bubble-app:has(.bubble-game:not(.is-playing)){padding:0}.bubble-game:not(.is-playing){width:100vw;max-width:none;height:100dvh;min-height:0;border:0;border-radius:0}}
+@media(max-width:520px){main.bubble-app:has(.bubble-game:not(.is-playing)){padding:0}.bubble-game:not(.is-playing){width:100%;max-width:none;height:100dvh;min-height:0;border:0;border-radius:0}}
+html,body{overflow-x:hidden}
+main.bubble-app{overflow-x:hidden}
+.menu-screen,.levels-screen,.settings-screen,.result-screen{overflow-x:hidden}
+.hub-actions,.hub-tiles,.hub-stats{min-width:0;max-width:100%}
+.hub-tile{min-width:0}
 @media(max-height:600px){.hub-play{height:56px;flex-basis:56px;font-size:20px}.hub-tile{min-height:68px}}
 .menu-hub .menu-art{width:min(330px,94%);min-height:130px;max-height:280px;background:none;border-radius:0;transform:none}
 .menu-hub .bubble-a{left:0;top:4%;width:64px;height:64px;animation:hub-float 3.4s ease-in-out infinite}
