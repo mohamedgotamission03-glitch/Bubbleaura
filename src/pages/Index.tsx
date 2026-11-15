@@ -23,12 +23,13 @@ function readSave(): Save {
 }
 const colorCount = (level: number) => Math.min(3 + Math.floor((level - 1) / 4), COLORS.length);
 function makeLevel(level: number): Bubble[] {
-  const rows = Math.min(4 + Math.floor((level - 1) / 3), 9);
+  const rows = Math.min(7 + Math.floor((level - 1) / 3), 9);
   const colors = colorCount(level);
   return Array.from({ length: rows }, (_, row) => Array.from({ length: COLS }, (_, col) => {
     const shape = level % 4;
     const present = shape === 0 ? (row + col) % 5 !== 0 : shape === 1 ? (col > 0 && col < COLS - 1) || row % 2 === 0 : shape === 2 ? row < rows - 1 || (col > 1 && col < COLS - 2) : true;
-    return present ? { row, col, color: Math.floor((row * 7 + col * 3 + Math.floor(Math.random() * colors)) % colors) } : null;
+    const color = (Math.floor(col / 3) + Math.floor(row / 2) + Math.floor((col + row) / 6)) % colors;
+    return present ? { row, col, color } : null;
   }).filter((bubble): bubble is Bubble => bubble !== null)).flat();
 }
 const randColor = (level: number) => Math.floor(Math.random() * colorCount(level));
@@ -127,9 +128,9 @@ export default function Index() {
       const point = (row:number,col:number) => ({x:m.left+(col+(row%2)*.5)*m.cell,y:m.top+row*m.cell*ROW_GAP});
       const drawBubble = (x:number,y:number,color:number,r=m.radius) => {
         const g=ctx.createRadialGradient(x-r*.38,y-r*.42,r*.04,x,y,r);
-        g.addColorStop(0,'#ffffff');g.addColorStop(.19,COLORS[color]);g.addColorStop(.74,COLORS[color]);g.addColorStop(1,'#25456c55');
-        ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
-        ctx.beginPath();ctx.ellipse(x-r*.27,y-r*.32,r*.19,r*.11,-.5,0,Math.PI*2);ctx.fillStyle='#ffffffa8';ctx.fill();
+        g.addColorStop(0,'#ffffff');g.addColorStop(.15,COLORS[color]);g.addColorStop(.72,COLORS[color]);g.addColorStop(1,'#172342');
+        ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=g;ctx.shadowColor=`${COLORS[color]}66`;ctx.shadowBlur=5;ctx.fill();ctx.shadowBlur=0;
+        ctx.beginPath();ctx.ellipse(x-r*.27,y-r*.32,r*.2,r*.12,-.5,0,Math.PI*2);ctx.fillStyle='#ffffffc7';ctx.fill();
         ctx.beginPath();ctx.arc(x+r*.22,y+r*.27,r*.055,0,Math.PI*2);ctx.fillStyle='#ffffff65';ctx.fill();
       };
       boardRef.current.forEach(b => { const p=point(b.row,b.col); drawBubble(p.x,p.y,b.color); });
