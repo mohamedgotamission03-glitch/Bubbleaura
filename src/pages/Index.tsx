@@ -1,175 +1,115 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { ArrowRight, Check, ChevronRight, Heart, LockKeyhole, Map, Pause, Play, RotateCcw, Star, Volume2, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
-import GameScreen from '@/components/GameScreen';
-import AdPrivacyControls from '@/components/AdPrivacyControls';
-import { canPlay, Game, newGame, readSave, revive, stagePlace, won } from '@/lib/puzzle';
-import { initializeAds, requestRewardedAd, rewardedAdsAvailable, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
-import { cheerFor, playClear, playGameOver, playLevelStart, playMenu, playPlace, playRevive, playUndo, playWin, stopAudio, unlockAudio } from '@/lib/audio';
+import { initializeAds, setBannerVisible, showCompletionInterstitial } from '@/lib/ads';
 import { ADMOB_CONFIG } from '@/config/admob';
-import { toast } from 'sonner';
+import { Aim, RotateCcw, Trophy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import './bubble-game.css';
 
-type Modal = 'levels'|'settings'|'help'|'pause'|'restart'|'win'|'over'|null;
-const Index = () => {
-  const [save,setSave] = useState(readSave);
-  const game=save.game;
-  const [modal,setModal] = useState<Modal>(null);
-  const [undo,setUndo] = useState<Game|null>(null);
-  const [busy,setBusy] = useState(false);
-  const [bump,setBump] = useState(0);
-  const [storageWarning,setStorageWarning] = useState(false);
-  const [clearing,setClearing] = useState(false);
-  const [combo,setCombo] = useState<{id:number;label:string;points:number;lines:number;rows:number[];cols:number[];streak:number}|null>(null);
-  const timers = useRef<number[]>([]);
-  const pendingFinal = useRef<Game|null>(null);
-  const burstingRef = useRef(false);
-  const celebrated = useRef(false);
-  const gameOverSound = useRef(false);
-  const previousModal = useRef<Modal>(null);
-  const prefs = useRef({sound:true,music:true,haptics:true});
-  const transitioning = useRef(false);
-  const rewardPending = useRef(false);
-  const streak = useRef(0);
-  prefs.current={sound:save.sound,music:false,haptics:save.haptics};
-  function clearTimers() { timers.current.forEach(id=>window.clearTimeout(id)); timers.current=[]; }
-  useEffect(()=>{
-    const snapshot=pendingFinal.current?{...save,game:pendingFinal.current,best:Math.max(save.best,pendingFinal.current.score)}:save;
-    try {localStorage.setItem('blockbloom-v1',JSON.stringify(snapshot));} catch {setStorageWarning(true);}
-  },[save]);
-  useEffect(()=>{
-    if(burstingRef.current)return;
-    if(won(game)) {
-      if(!game.completionCounted) {
-        setSave(prev=>prev.game.completionCounted?prev:{...prev,game:{...prev.game,completionCounted:true},puzzlesCompleted:prev.puzzlesCompleted+1,unlocked:Math.min(12,Math.max(prev.unlocked,game.level+1)),completed:Array.from(new Set([...prev.completed,game.level]))});
-        setUndo(null);
-        if(!celebrated.current){celebrated.current=true;playWin(prefs.current.sound);}
-      }
-      setModal('win');
-    } else {
-      celebrated.current=false;
-      if(!canPlay(game)) {
-        setModal('over');
-        if(!gameOverSound.current){gameOverSound.current=true;playGameOver(prefs.current.sound);}
-      } else gameOverSound.current=false;
+type Bubble = { row: number; col: number; color: number };
+const COLORS = ['#ff668a', '#38c8b4', '#ffc34f', '#9c73f5', '#57a8f5'];
+const ROWS = 9, COLS = 8;
+const makeBoard = (): Bubble[] => Array.from({ length: 5 }, (_, row) => Array.from({ length: COLS - (row % 2), (_, col) => ({ row, col, color: (row + col * 2 + Math.floor(Math.random() * 3)) % COLORS.length }))).flat();
+const randomColor = () => Math.floor(Math.random() * COLORS.length);
+
+export default function Index() {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [board, setBoard] = useState<Bubble[]>(makeBoard);
+  const [shot, setShot] = useState(randomColor);
+  const [next, setNext] = useState(randomColor);
+  const [score, setScore] = useState(0);
+  const [shots, setShots] = useState(0);
+  const [round, setRound] = useState(1);
+  const [aim, setAim] = useState({ x: 0, y: 0 });
+  const [paused, setPaused] = useState(false);
+  const [result, setResult] = useState<'win'|'over'|null>(null);
+  const busy = useRef(false);
+  const adBusy = useRef(false);
+  const colors = COLORS;
+
+  useEffect(() => {
+    void initializeAds().then(allowed => { if (allowed) setBannerVisible(true); });
+    return () => setBannerVisible(false);
+  }, []);
+
+  useEffect(() => {
+    const element = canvas.current;
+    if (!element) return;
+    const ctx = element.getContext('2d');
+    if (!ctx) return;
+    const width = element.clientWidth, height = element.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    element.width = width * dpr; element.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, width, height);
+    const cell = Math.min((width - 32) / COLS, 38);
+    const radius = cell * .45;
+    const ox = (width - (COLS * cell)) / 2 + radius;
+    const oy = 24;
+    const coords = (row:number,col:number) => ({x:ox+col*cell+(row%2 ? cell/2 : 0),y:oy+row*cell*.87});
+    board.forEach(b => {
+      const {x,y}=coords(b.row,b.col);
+      const gradient=ctx.createRadialGradient(x-radius*.35,y-radius*.4,1,x,y,radius*1.15);
+      gradient.addColorStop(0,'#ffffff'); gradient.addColorStop(.16,colors[b.color]); gradient.addColorStop(1,colors[b.color]);
+      ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=gradient;ctx.fill();
+      ctx.beginPath();ctx.arc(x-radius*.28,y-radius*.3,radius*.12,0,Math.PI*2);ctx.fillStyle='#ffffffa8';ctx.fill();
+    });
+    const launcher={x:width/2,y:height-43};
+    ctx.setLineDash([4,7]);ctx.strokeStyle='#ffffff70';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(launcher.x,launcher.y);ctx.lineTo(aim.x||launcher.x,aim.y||launcher.y-120);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(launcher.x,launcher.y,radius+2,0,Math.PI*2);ctx.fillStyle=colors[shot];ctx.fill();
+  },[board,shot,aim]);
+
+  async function resetRound(nextRound=round, completed=false) {
+    if (completed && nextRound>1 && (nextRound-1)%ADMOB_CONFIG.puzzlesPerInterstitial===0 && !adBusy.current) {
+      adBusy.current=true;
+      await showCompletionInterstitial().catch(()=>({status:'unavailable' as const}));
+      adBusy.current=false;
     }
-  },[game]);
-  useEffect(()=>{
-    if(modal!==previousModal.current) {
-      if(modal && modal!=='win' && modal!=='over') playMenu(prefs.current.sound,true);
-      else if(!modal && previousModal.current) playMenu(prefs.current.sound,false);
-      previousModal.current=modal;
+    setRound(nextRound);setBoard(makeBoard());setScore(0);setShots(0);setShot(randomColor());setNext(randomColor());setResult(null);setPaused(false);
+  }
+
+  function shoot(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (paused||result||busy.current) return;
+    const rect=event.currentTarget.getBoundingClientRect();
+    const targetX=event.clientX-rect.left, targetY=event.clientY-rect.top;
+    const originX=rect.width/2, originY=rect.height-43;
+    if(targetY>originY-14)return;
+    busy.current=true;
+    const cell=Math.min((rect.width-32)/COLS,38), radius=cell*.45;
+    const ox=(rect.width-COLS*cell)/2+radius, oy=24;
+    const col=Math.max(0,Math.min(COLS-1,Math.round((targetX-ox-(Math.round((originY-targetY)/cell)%2)*cell/2)/cell)));
+    const row=Math.max(0,Math.min(ROWS-1,Math.round((targetY-oy)/(cell*.87))));
+    const placement={row,col,color:shot};
+    const existing=board.some(b=>b.row===row&&b.col===col);
+    let settled={...placement};
+    if(existing){
+      const candidate=Array.from({length:ROWS},(_,r)=>Array.from({length:COLS},(_,c)=>({row:r,col:c}))).flat().filter(p=>!board.some(b=>b.row===p.row&&b.col===p.col)).sort((a,b)=>Math.hypot(a.col-col,a.row-row)-Math.hypot(b.col-col,b.row-row))[0];
+      if(candidate)settled={...candidate,color:shot};
     }
-  },[modal]);
-  useEffect(()=>{
-    void initializeAds().then(allowed=>{if(allowed)setBannerVisible(true);});
-    const start=()=>{void unlockAudio();};
-    window.addEventListener('pointerdown',start);
-    return ()=>{ clearTimers(); window.removeEventListener('pointerdown',start); stopAudio(); };
-  },[]);
-  function finishClear() {
-    clearTimers(); pendingFinal.current=null; burstingRef.current=false; setClearing(false); setCombo(null);
+    let updated=[...board,settled];
+    const key=(r:number,c:number)=>`${r}:${c}`;
+    const neighbors=(b:Bubble)=>[[b.row,b.col-1],[b.row,b.col+1],[b.row-1,b.col+(b.row%2?0:-1)],[b.row-1,b.col+(b.row%2?1:0)],[b.row+1,b.col+(b.row%2?0:-1)],[b.row+1,b.col+(b.row%2?1:0)]];
+    const same=new Set([key(settled.row,settled.col)]), queue=[settled];
+    while(queue.length){const node=queue.pop()!;for(const [r,c] of neighbors(node)){const match=updated.find(b=>b.row===r&&b.col===c&&b.color===shot);if(match&&!same.has(key(r,c))){same.add(key(r,c));queue.push(match);}}}
+    if(same.size>=3){updated=updated.filter(b=>!same.has(key(b.row,b.col)));let dropped=true;while(dropped){dropped=false;const attached=new Set(updated.filter(b=>b.row===0).map(b=>key(b.row,b.col)));const q=updated.filter(b=>b.row===0);while(q.length){const node=q.pop()!;for(const [r,c] of neighbors(node)){const k=key(r,c), found=updated.find(b=>b.row===r&&b.col===c);if(found&&!attached.has(k)){attached.add(k);q.push(found);}}}const before=updated.length;updated=updated.filter(b=>attached.has(key(b.row,b.col)));dropped=updated.length<before;}setScore(v=>v+same.size*10);}
+    const newShots=shots+1;setShots(newShots);setBoard(updated);setShot(next);setNext(randomColor());
+    if(!updated.length)setResult('win');else if(newShots>=5&&newShots%5===0){const descended=updated.map(b=>({...b,row:b.row+1}));if(descended.some(b=>b.row>=ROWS-1)){setBoard(descended);setResult('over');}else setBoard(descended);}
+    setTimeout(()=>{busy.current=false;},160);
   }
-  function onPlace(index:number,row:number,col:number) {
-    if(modal||busy||clearing||won(game))return;
-    const staged=stagePlace(game,index,row,col);if(!staged)return;
-    void unlockAudio();
-    setUndo(game);
-    const gained=staged.final.score-game.score;
-    if(!staged.rows.length&&!staged.cols.length){
-      pendingFinal.current=null;
-      setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
-      streak.current=0;
-      playPlace(prefs.current.sound); if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(12); setBump(n=>n+1);
-      return;
-    }
-    const lines=staged.rows.length+staged.cols.length;
-    streak.current+=1;
-    const cheer=cheerFor(lines,won(staged.final),streak.current);
-    pendingFinal.current=staged.final; burstingRef.current=true; setClearing(true);
-    const shown=Math.max(streak.current,lines);
-    setCombo({id:Date.now(),label:cheer,points:gained,lines,rows:staged.rows,cols:staged.cols,streak:shown});
-    setSave(prev=>({...prev,game:staged.final,best:Math.max(prev.best,staged.final.score)}));
-    if(won(staged.final)){celebrated.current=true;playWin(prefs.current.sound);}
-    else playClear(prefs.current.sound,lines,shown);
-    if(prefs.current.haptics&&navigator.vibrate)navigator.vibrate(shown>=4?[22,28,18,36]:lines>1?[16,24,16,28]:[18,26,18]);
-    timers.current.push(window.setTimeout(()=>{
-      pendingFinal.current=null; burstingRef.current=false; setClearing(false);
-      setSave(prev=>({...prev,game:{...staged.final},best:Math.max(prev.best,staged.final.score)}));
-      setBump(n=>n+1);
-    },460));
-    timers.current.push(window.setTimeout(()=>setCombo(null),1500));
-  }
-  function undoMove() {
-    if(!undo||busy)return;
-    streak.current=0; finishClear(); setSave(prev=>({...prev,game:undo})); setUndo(null); playUndo(prefs.current.sound);
-  }
-  async function startLevel(level?:number) {
-    if(transitioning.current)return;
-    if(!(won(game)&&level===game.level+1))streak.current=0;
-    finishClear();
-    transitioning.current=true;
-    try {
-      if(won(game)&&save.puzzlesCompleted-save.lastInterstitialAt>=ADMOB_CONFIG.puzzlesPerInterstitial) {
-        setBusy(true);
-        // Consume this milestone even on no-fill: no catch-up ads during play.
-        setSave(prev=>({...prev,lastInterstitialAt:prev.puzzlesCompleted}));
-        await showCompletionInterstitial().catch(()=>({status:'unavailable'}));
-      }
-      if(level===undefined)setModal('levels');
-      else {setSave(prev=>({...prev,game:newGame(level)}));setUndo(null);setModal(null);playLevelStart(prefs.current.sound);}
-    } finally {setBusy(false);transitioning.current=false;}
-  }
-  function retry() {void startLevel(game.level);}
-  async function reward() {
-    if(busy||rewardPending.current||game.revived||canPlay(game))return;
-    if(!rewardedAdsAvailable()){toast.info('No video available right now. You can still restart.');return;}
-    rewardPending.current=true;setBusy(true);
-    try {
-      const result=await requestRewardedAd();
-      if(result.status==='completed'&&result.rewarded===true) {
-        setSave(prev=>prev.game.revived?prev:{...prev,game:revive(prev.game)});
-        setUndo(null);setModal(null);playRevive(prefs.current.sound);
-        toast.success('Board cleared. Your score is safe!');
-      } else toast.info(result.status==='unavailable'?'No video available right now. You can still restart.':'Video not completed. No revive was used.');
-    } finally {setBusy(false);rewardPending.current=false;}
-  }
-  const titles: Record<Exclude<Modal,null>,string>={levels:'Your Cubellio journey',settings:'Make yourself at home',help:'Place. Clear. Pop!',pause:'Take a little breather',restart:'A fresh start?',win:'Level popped!',over:'Out of room, not out of chances'};
-  const descriptions: Record<Exclude<Modal,null>,string>={levels:'One little challenge at a time. Complete both goals to unlock the next level.',settings:'Your preferences and progress stay on this device.',help:'No timer. No rush. Just find your flow.',pause:'Your board is right where you left it.',restart:'Your current board will be cleared. Unlocked levels and best score stay saved.',win:'Brilliant run! Both goals complete. Ready for your next challenge?',over:'There is no space for your remaining blocks.'};
-  return <div className="app-shell">
-    <GameScreen
-      save={save}
-      soundEnabled={save.sound}
-      disabled={Boolean(modal)||busy||won(game)}
-      undoAvailable={Boolean(undo)}
-      bump={bump}
-      onPlace={onPlace}
-      onLevels={()=>setModal('levels')}
-      onSettings={()=>setModal('settings')}
-      onHelp={()=>setModal('help')}
-      onPause={()=>setModal('pause')}
-      onRestart={()=>setModal('restart')}
-      onUndo={undoMove}
-      clearing={clearing}
-      combo={combo}
-    />
-    {Capacitor.getPlatform()==='web'&&<div className="mx-auto flex justify-center py-2"><Link to="/store-assets" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-xs font-bold text-purple-700 hover:bg-purple-100">Store launch kit <ArrowRight size={14}/></Link></div>}
-    {storageWarning&&<p className="mx-auto max-w-[400px] px-4 py-2 text-center text-xs text-amber-700">Saving isn’t available right now. This visit won’t be remembered after you close the game.</p>}
-    <Dialog open={Boolean(modal)} onOpenChange={open=>{if(!open&&!busy){if(modal==='win'||modal==='over')setModal('pause');else setModal(null);}}}>
-      <DialogContent className="bloom-dialog max-h-[90dvh] overflow-y-auto rounded-[28px] border-0 p-7 sm:max-w-[430px]" onEscapeKeyDown={e=>{if(busy)e.preventDefault();}} onPointerDownOutside={e=>{if(busy)e.preventDefault();}}>
-        <DialogHeader><DialogTitle className="text-center text-2xl font-extrabold tracking-tight">{modal?titles[modal]:''}</DialogTitle><DialogDescription className="pt-2 text-center text-sm leading-6">{modal?descriptions[modal]:''}</DialogDescription></DialogHeader>
-        {modal==='levels'&&<div><div className="mt-2 grid grid-cols-3 gap-3">{Array.from({length:12},(_,i)=>i+1).map(level=><Button key={level} disabled={level>save.unlocked||busy} className={`level-tile ${level===game.level?'selected':''}`} variant="outline" onClick={()=>{if(level===game.level)setModal(won(game)?'win':null);else if(game.moves>0&&!won(game)&&canPlay(game)){if(window.confirm('Switch levels? Your current board will be replaced.'))startLevel(level);}else startLevel(level);}}><span>{level>save.unlocked?<LockKeyhole size={20}/>:level}</span><span className="text-[10px]">{save.completed.includes(level)?'✓ Completed':level===game.level?'Current':level>save.unlocked?'Locked':'Play level'}</span></Button>)}</div></div>}
-        {modal==='settings'&&<div className="space-y-3 py-3"><div className="setting-row"><span><Volume2 size={18}/> Sound effects</span><Switch aria-label="Sound effects" checked={save.sound} onCheckedChange={sound=>{setSave(prev=>({...prev,sound}));if(!sound)stopAudio();}}/></div><div className="setting-row"><span><Zap size={18}/> Haptic feedback</span><Switch aria-label="Haptic feedback" checked={save.haptics} onCheckedChange={haptics=>setSave(prev=>({...prev,haptics}))}/></div><Link className="setting-link" to="/privacy">Privacy Policy <ChevronRight size={18}/></Link><Link className="setting-link" to="/terms">Terms of Use <ChevronRight size={18}/></Link><AdPrivacyControls/><Button className="bloom-button w-full" onClick={()=>setModal(null)}>All set <Check size={17}/></Button></div>}
-        {modal==='help'&&<div className="space-y-5 py-3">{[{n:'01',title:'Find a home for your blocks',text:'Drag a block onto the board, or tap a block then tap a square. The top-left of the shape lands where you point.'},{n:'02',title:'Make a line. Make some space.',text:'Fill any full row or column to clear it. Clear several at once for a bonus. Blocks cannot be rotated.'},{n:'03',title:'Pop through every level',text:'Reach the score goal and clear the required lines. New blocks arrive when you use all three. No space left? Try a one-time revive.'}].map(step=><div className="flex gap-3" key={step.n}><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-xs font-bold text-purple-600">{step.n}</span><div><h3 className="text-sm font-bold">{step.title}</h3><p className="mt-1 text-xs leading-6 text-muted-foreground">{step.text}</p></div></div>)}<Button className="bloom-button w-full" onClick={()=>setModal(null)}>Let's play <Play size={15} fill="currentColor"/></Button></div>}
-        {modal==='pause'&&<div className="space-y-3 pt-3"><div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[25px] bg-purple-100 text-purple-600"><Pause size={32} fill="currentColor"/></div><Button className="bloom-button w-full" onClick={()=>setModal(won(game)?'win':!canPlay(game)?'over':null)}><Play size={16}/> Back to the blocks</Button><Button className="secondary-button w-full" variant="outline" onClick={()=>setModal('levels')}>Choose a level <Map size={16}/></Button></div>}
-        {modal==='restart'&&<div className="space-y-3 pt-4"><Button disabled={busy} className="bloom-button w-full" onClick={()=>startLevel(game.level)}><RotateCcw size={17}/> Restart level {game.level}</Button><Button className="secondary-button w-full" variant="outline" onClick={()=>setModal(null)}>Keep playing</Button></div>}
-        {modal==='win'&&<div className="text-center"><img src="/assets/block-buddies.png" className="mx-auto h-44 w-44 rounded-3xl" alt="Happy blocks celebrating"/><div className="mb-5 flex justify-center gap-2 text-[#e9b936]">{[1,2,3].map(i=><Star key={i} fill="currentColor" size={27}/>)}</div><p className="mb-5 text-sm font-bold">{game.score.toLocaleString()} points · {game.lines} lines cleared</p><Button disabled={busy} className="bloom-button w-full" onClick={()=>startLevel(game.level<12?game.level+1:undefined)}>{busy?'Please wait…':game.level<12?`On to level ${game.level+1}`:'All 12 levels complete! Play again'}<ArrowRight size={17}/></Button></div>}
-        {modal==='over'&&<div className="space-y-3 pt-3"><div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[25px] bg-[#fce9f1] text-pink-500"><Heart size={35}/></div><div className="mb-4 text-center text-sm font-bold">{game.score.toLocaleString()} points · Level {game.level}</div>{!game.revived&&rewardedAdsAvailable()&&<Button disabled={busy} className="bloom-button w-full" onClick={reward}><Play size={16}/>{busy?'Opening video…':'Watch video · 1 revive'}</Button>}{!game.revived&&rewardedAdsAvailable()&&<p className="text-center text-[11px] text-muted-foreground">Clear the board and keep your score. Once per puzzle.</p>}<Button disabled={busy} className="secondary-button w-full" variant="outline" onClick={retry}><RotateCcw size={16}/>{busy?'Please wait…':'Try again'}</Button>{undo&&<Button disabled={busy} variant="ghost" className="tool-button w-full" onClick={()=>{finishClear();setSave(prev=>({...prev,game:undo}));setUndo(null);setModal(null);}}>Undo last move</Button>}</div>}
-      </DialogContent>
-    </Dialog>
-  </div>;
-};
-export default Index;
+
+  function handlePointer(event:React.PointerEvent<HTMLCanvasElement>){const rect=event.currentTarget.getBoundingClientRect();setAim({x:event.clientX-rect.left,y:event.clientY-rect.top});}
+
+  return <main className="bubble-app">
+    <section className="bubble-game" aria-label="Bubble Pop game">
+      <header className="bubble-header"><div><span className="bubble-logo">✦</span><div><h1>Pop Garden</h1><p>Little bubbles, big joy</p></div></div><span className="bubble-tag">BUBBLE SHOOTER</span></header>
+      <div className="bubble-stats"><div><small>LEVEL</small><strong>{String(round).padStart(2,'0')}</strong></div><div className="score-pill"><Trophy size={16}/><span>{score.toLocaleString()} <small>POINTS</small></span></div><button className="round-control" onClick={()=>setPaused(!paused)} aria-label={paused?'Resume':'Pause'}>{paused?'▶':'Ⅱ'}</button></div>
+      <div className="bubble-instruction">{result?'Lovely round!':paused?'Take a breather':'Match 3 or more bubbles to pop them'}</div>
+      <div className="bubble-canvas-wrap"><canvas ref={canvas} onPointerMove={handlePointer} onPointerDown={shoot} aria-label="Aim and tap to shoot bubbles"/></div>
+      <div className="shooter-footer"><div className="next-bubble"><span>UP NEXT</span><i style={{background:colors[next]}}/></div><div className="aim-badge"><Aim size={16}/> TAP TO AIM & POP</div><Button variant="ghost" className="restart-bubble" onClick={()=>void resetRound()} aria-label="Restart level"><RotateCcw size={18}/></Button></div>
+      <div className="ad-dock" aria-hidden="true"><div className="banner-slot"/></div>
+      {result&&<div className="bubble-overlay"><div className="result-card"><div className="result-emoji">{result==='win'?'🎉':'🌷'}</div><h2>{result==='win'?'All popped!':'Keep blooming!'}</h2><p>{result==='win'?'You cleared the garden.':'A fresh board is ready when you are.'} {score} points</p><Button className="bubble-primary" onClick={()=>void resetRound(result==='win'?round+1:round,result==='win')}>{result==='win'?'Next level':'Try again'}</Button></div></div>}
+      {paused&&!result&&<div className="bubble-overlay"><div className="result-card"><div className="result-emoji">☁️</div><h2>Paused</h2><p>Your bubbles are waiting.</p><Button className="bubble-primary" onClick={()=>setPaused(false)}>Back to popping</Button></div></div>}
+    </section>
+    {Capacitor.getPlatform()==='web'&&<p className="web-note">A cheerful little game for your break</p>}
+  </main>;
+}
