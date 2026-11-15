@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import '@/components/bubble-game.css';
 import '@/components/bubble-game-reference.css';
 import '@/components/bubble-game-space.css';
+import '@/components/bubble-game-responsive.css';
 
 type Bubble = { row: number; col: number; color: number };
 type Screen = 'menu' | 'game' | 'levels' | 'settings' | 'won' | 'lost';
@@ -107,9 +108,14 @@ export default function Index() {
     const c = canvas.current;
     if (!c) return null;
     const width = c.clientWidth, height = c.clientHeight;
-    const cell = Math.min((width - 24) / (COLS + .5), 42);
+    const game = c.closest('.bubble-game');
+    const safeTop = game ? parseFloat(getComputedStyle(game).getPropertyValue('--safe-top')) || 0 : 0;
+    const safeBottom = game ? parseFloat(getComputedStyle(game).getPropertyValue('--safe-bottom')) || 0 : 0;
+    const rows = Math.max(7, ...boardRef.current.map(b => b.row + 1));
+    const heightCell = Math.max(15, (height - safeTop - safeBottom - 190) / (Math.max(1, rows - 1) * ROW_GAP + 2.6));
+    const cell = Math.min((width - 24) / (COLS + .5), 42, heightCell);
     const radius = cell * .47;
-    return { width, height, cell, radius, left: (width - (COLS + .5) * cell) / 2 + radius, top: 90, launcherX: width / 2, launcherY: height - 94 };
+    return { width, height, cell, radius, left: (width - (COLS + .5) * cell) / 2 + radius, top: safeTop + 78, launcherX: width / 2, launcherY: height - Math.max(94, safeBottom + 72) };
   }, []);
 
   useEffect(() => {
