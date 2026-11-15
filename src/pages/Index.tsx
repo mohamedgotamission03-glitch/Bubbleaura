@@ -8,6 +8,7 @@ import { unlockAudio } from '@/lib/audio';
 import { ArrowLeft, ArrowLeftRight, Bomb, ChevronRight, Flame, Gift, Pause, Play, RotateCcw, Settings2, Star, Trophy, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import AdPrivacyControls from '@/components/AdPrivacyControls';
 import '@/components/bubble-game.css';
 import '@/components/bubble-game-reference.css';
@@ -134,7 +135,8 @@ export default function Index() {
       setRevived(true);
       setEnd(null);
       engine.current?.revive();
-    }
+    } else if (result.status === 'unavailable') toast.info('No ad is ready right now. Please try again in a moment.');
+    else toast.info('Watch the whole ad to earn your 5 extra moves.');
   }
 
   const highScore = Math.max(0, ...save.best.filter(Boolean));
