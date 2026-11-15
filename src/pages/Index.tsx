@@ -27,7 +27,9 @@ function readSave(): Save {
   try {
     const parsed = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
     if (parsed && Number.isInteger(parsed.unlocked) && Array.isArray(parsed.best)) {
-      return { ...freshSave(), ...parsed, stars: Array.isArray(parsed.stars) ? parsed.stars : [], unlocked: Math.max(1, Math.min(MAX_LEVEL, parsed.unlocked)) };
+      const merged = { ...freshSave(), ...parsed, stars: Array.isArray(parsed.stars) ? parsed.stars : [], unlocked: Math.max(1, Math.min(MAX_LEVEL, parsed.unlocked)) };
+      if (!localStorage.getItem('gift-preview-reset')) { localStorage.setItem('gift-preview-reset', '1'); return { ...merged, gift: '', giftStreak: 0 }; }
+      return merged;
     }
   } catch { /* Storage may be unavailable offline or in private mode. */ }
   return freshSave();
