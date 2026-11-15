@@ -220,6 +220,20 @@ export function playPowerUp(enabled: boolean) {
   sparkle(now + 0.1, 0.1, 0.16);
 }
 
+export function playGift(enabled: boolean) {
+  const ctx = ready(enabled);
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  tone(now, 190, 0.12, 0.12, 'sine', 70);
+  sparkle(now + 0.05, 0.12, 0.18);
+  [523, 659, 784, 1046, 1318, 1568].forEach((note, index) => {
+    tone(now + 0.12 + index * 0.07, note, 0.22, 0.13, 'triangle');
+    tone(now + 0.12 + index * 0.07, note * 2, 0.14, 0.04, 'sine');
+  });
+  [1046, 1318, 1568].forEach((note, index) => tone(now + 0.6, note, 0.55, 0.1 - index * 0.015, 'sine'));
+  sparkle(now + 0.55, 0.16, 0.35);
+}
+
 export function playDescend(enabled: boolean) {
   const ctx = ready(enabled);
   if (!ctx) return;

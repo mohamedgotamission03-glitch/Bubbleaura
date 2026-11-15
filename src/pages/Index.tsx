@@ -4,7 +4,7 @@ import { initializeAds, requestRewardedAd, rewardedAdsAvailable, setBannerVisibl
 import { ADMOB_CONFIG } from '@/config/admob';
 import { BubbleEngine, EndInfo, Hud } from '@/lib/bubble-engine';
 import { MAX_LEVEL, WORLDS } from '@/lib/bubbles';
-import { startMusic, stopMusic, unlockAudio } from '@/lib/audio';
+import { playGift, startMusic, stopMusic, unlockAudio } from '@/lib/audio';
 import { ArrowLeft, ArrowLeftRight, Bomb, ChevronRight, Flame, Gift, LayoutGrid, Music, Pause, Play, RotateCcw, Settings2, Star, Trophy, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -28,7 +28,7 @@ function readSave(): Save {
     const parsed = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
     if (parsed && Number.isInteger(parsed.unlocked) && Array.isArray(parsed.best)) {
       const merged = { ...freshSave(), ...parsed, stars: Array.isArray(parsed.stars) ? parsed.stars : [], unlocked: Math.max(1, Math.min(MAX_LEVEL, parsed.unlocked)) };
-      if (!localStorage.getItem('gift-preview-reset-4')) { localStorage.setItem('gift-preview-reset-4', '1'); return { ...merged, gift: '', giftStreak: 0 }; }
+      if (!localStorage.getItem('gift-preview-reset-5')) { localStorage.setItem('gift-preview-reset-5', '1'); return { ...merged, gift: '', giftStreak: 0 }; }
       return merged;
     }
   } catch { /* Storage may be unavailable offline or in private mode. */ }
@@ -61,6 +61,7 @@ export default function Index() {
     const amount = nextAmount;
     setSave(prev => ({ ...prev, gift: dayStamp(), giftStreak: streak, bombs: prev.bombs + amount }));
     setGiftPopup({ amount, streak });
+    playGift(save.sound);
   };
   const useBooster = () => {
     if (save.bombs > 0 && engine.current?.useBomb()) setSave(prev => ({ ...prev, bombs: prev.bombs - 1 }));
