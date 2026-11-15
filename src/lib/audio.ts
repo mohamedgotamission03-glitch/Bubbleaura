@@ -1,5 +1,4 @@
 let context: AudioContext | null = null;
-let tap: MediaStreamAudioDestinationNode | null = null;
 
 function audio(): AudioContext | null {
   if (context) return context;
@@ -29,7 +28,6 @@ function tone(at: number, freq: number, length: number, volume: number, type: Os
   gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
   osc.connect(gain);
   gain.connect(ctx.destination);
-  if (tap) gain.connect(tap);
   osc.start(at);
   osc.stop(at + length + 0.02);
 }
@@ -54,7 +52,6 @@ function sparkle(at: number, volume: number, length = 0.12) {
   source.connect(filter);
   filter.connect(gain);
   gain.connect(ctx.destination);
-  if (tap) gain.connect(tap);
   source.start(at);
 }
 
@@ -235,14 +232,3 @@ export function stopAudio() {
   if (context?.state === 'running') void context.suspend();
 }
 
-// Used by the promo recorder to capture the game's own sounds into a video.
-export const audioContext = audio;
-export { tone, sparkle };
-export function startAudioCapture(): MediaStream | null {
-  const ctx = audio();
-  if (!ctx) return null;
-  if (ctx.state === 'suspended') void ctx.resume();
-  tap = ctx.createMediaStreamDestination();
-  return tap.stream;
-}
-export function stopAudioCapture() { tap = null; }

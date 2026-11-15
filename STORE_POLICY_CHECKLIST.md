@@ -22,7 +22,7 @@ Status of the code and documents in this repository, and what you must still do 
   - Optional: not collected for developer use.
 - **Target audience and content:** choose adult/general audience (13+ or 18+). Do not select under-13 groups unless you complete the Families program requirements (not claimed here). Complete the **content rating (IARC)** questionnaire; the game has cartoon-style bubble shooting, no violence, gambling, or user-generated content.
 - **Target API:** the release workflow targets Android API 36; confirm it meets the current minimum.
-- **Store listing:** title, short and full description in `src/lib/store-listing.ts` describe the real game. The listing must not mention unrelated apps, keyword-stuff, or claim rewards that do not exist. Marketing screenshots (phone, 7" and 10" tablet), the 1024 × 500 feature graphic and a promo video are generated on the `/store-assets` page from the real game. They are web renders with captions; if a store asks for native device captures, take them from the test APK. Play takes the video as a YouTube link.
+- **Store listing:** title, short and full description in `src/lib/store-listing.ts` describe the real game. The listing must not mention unrelated apps, keyword-stuff, or claim rewards that do not exist. Use real screenshots of Bubble Aura (phone, plus 7" and 10" tablet if you add tablet listings), a 1024 × 500 feature graphic and a 512 × 512 icon. Play takes a promo video as a YouTube link.
 - **Pre-launch:** new personal developer accounts must complete the required closed-testing period before production.
 
 ## AdMob

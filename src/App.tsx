@@ -3,13 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 
-const StoreAssets = lazy(() => import("./pages/StoreAssets"));
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -22,7 +20,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfUse />} />
-          <Route path="/store-assets" element={<Suspense fallback={<div className="flex min-h-dvh items-center justify-center bg-[#f5f0ff] text-sm font-bold text-purple-700">Preparing your store kit…</div>}><StoreAssets /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
