@@ -28,7 +28,7 @@ function readSave(): Save {
     const parsed = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
     if (parsed && Number.isInteger(parsed.unlocked) && Array.isArray(parsed.best)) {
       const merged = { ...freshSave(), ...parsed, stars: Array.isArray(parsed.stars) ? parsed.stars : [], unlocked: Math.max(1, Math.min(MAX_LEVEL, parsed.unlocked)) };
-      if (!localStorage.getItem('gift-preview-reset')) { localStorage.setItem('gift-preview-reset', '1'); return { ...merged, gift: '', giftStreak: 0 }; }
+      if (!localStorage.getItem('gift-preview-reset-2')) { localStorage.setItem('gift-preview-reset-2', '1'); return { ...merged, gift: '', giftStreak: 0 }; }
       return merged;
     }
   } catch { /* Storage may be unavailable offline or in private mode. */ }
