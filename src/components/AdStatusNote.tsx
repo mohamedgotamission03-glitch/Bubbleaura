@@ -35,10 +35,17 @@ function toText(report: AdDiagnostics) {
 export default function AdStatusNote() {
   const [report, setReport] = useState<AdDiagnostics | null>(null);
   const [busy, setBusy] = useState(false);
-  if (!nativeAdsAvailable()) return <p className="offline-note" role="status">Ad diagnostics are available in the Android app.</p>;
+  const native = nativeAdsAvailable();
 
   async function run() {
     setBusy(true);
+    if (!native) {
+      // The web preview has no ad SDK, so show sample data to preview the panel.
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      setReport({ ...getAdDiagnostics(), initialization: 'Ready, ads allowed', consent: 'status OBTAINED, can request ads: yes, privacy options: NOT_REQUIRED', banner: 'Banner not loaded (code 3: No fill)', interstitial: 'Loaded and ready', rewarded: 'Loaded and ready' });
+      setBusy(false);
+      return;
+    }
     setReport(getAdDiagnostics());
     try { setReport(await runAdDiagnostics()); }
     finally { setBusy(false); }
@@ -50,7 +57,8 @@ export default function AdStatusNote() {
   }
 
   return <div className="ad-diagnostics">
-    <Button variant="outline" className="secondary-button w-full" disabled={busy} onClick={run}><Stethoscope size={18} />{busy ? 'Testing ads… (about 5 seconds)' : 'Run ad diagnostics'}</Button>
+    <Button variant="outline" className="secondary-button w-full" disabled={busy} onClick={run}><Stethoscope size={18} />{busy ? 'Testing ads…' : native ? 'Run ad diagnostics' : 'Run ad diagnostics (preview)'}</Button>
+    {!native && <p className="mt-2 text-center text-[11px] font-bold text-[#8492a5]">Preview only: this shows sample data. Real results appear in the Android app.</p>}
     {report && <div className="offline-note" role="status">
       <pre className="whitespace-pre-wrap break-all font-mono text-[11px] leading-5">{toText(report)}</pre>
       {hints(report).map(line => <p key={line} className="mt-2 font-bold">{line}</p>)}
