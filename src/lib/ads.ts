@@ -22,6 +22,12 @@ let bannerQueue = Promise.resolve();
 let bannerStatus = 'Banner not requested yet';
 let bannerRetries = 0;
 export const getBannerStatus = () => bannerStatus;
+const diag = { initialization: 'Not started', consent: 'Not checked', interstitial: 'Not requested yet', rewarded: 'Not requested yet' };
+function describe(error: unknown): string {
+  const e = error as { code?: unknown; message?: unknown } | null;
+  const code = e && e.code !== undefined ? ` (code ${String(e.code)})` : '';
+  return `Failed${code}: ${String(e?.message ?? error)}`;
+}
 
 function bounded<T>(promise: Promise<T>, milliseconds = 10000): Promise<T> {
   return new Promise((resolve,reject)=>{
@@ -36,8 +42,9 @@ async function preloadInterstitial() {
   try {
     await bounded(AdMob.prepareInterstitial({adId:ADMOB_CONFIG.interstitialId,isTesting:ADMOB_CONFIG.testMode}));
     ready=allowed&&generation===consentGeneration;
+    diag.interstitial='Loaded and ready';
   }
-  catch {ready=false;}
+  catch(error) {ready=false;diag.interstitial=describe(error);}
   finally {loading=false;}
 }
 export function initializeAds(): Promise<boolean> {
@@ -61,12 +68,14 @@ export function initializeAds(): Promise<boolean> {
         // A banner with no fill is retried a few times instead of staying empty for the whole session.
         if(bannerRetries<6){bannerRetries++;setTimeout(()=>{if(bannerWanted)setBannerVisible(true);},Math.min(120000,15000*bannerRetries));}
       });
-      if(!consent.canRequestAds)return false;
+      diag.consent=`status ${String(consent.status)}, can request ads: ${consent.canRequestAds?'yes':'no'}, privacy options: ${String(consent.privacyOptionsRequirementStatus)}`;
+      if(!consent.canRequestAds){diag.initialization='Ads blocked: consent does not allow ad requests';return false;}
+      diag.initialization='Ready, ads allowed';
       allowed=true;
       void preloadInterstitial();
       void preloadRewarded();
       return true;
-    } catch {return false;}
+    } catch(error) {diag.initialization=describe(error);return false;}
   })();
   return initialization;
 }
@@ -126,7 +135,8 @@ async function preloadRewarded(): Promise<void> {
     try {
       await bounded(AdMob.prepareRewardVideoAd({adId:ADMOB_CONFIG.rewardedId,isTesting:ADMOB_CONFIG.testMode}));
       rewardReady=allowed&&generation===consentGeneration;
-    } catch {rewardReady=false;}
+      diag.rewarded='Loaded and ready';
+    } catch(error) {rewardReady=false;diag.rewarded=describe(error);}
     finally {rewardLoading=null;}
   })();
   return rewardLoading;
@@ -169,6 +179,27 @@ export async function requestRewardedAd(): Promise<AdResult> {
     });
   } catch {return {status:'unavailable'};}
   finally {rewardRequestActive=false;}
+}
+export type AdDiagnostics = { native: boolean; mode: string; appId: string; bannerId: string; interstitialId: string; rewardedId: string; initialization: string; consent: string; banner: string; interstitial: string; rewarded: string };
+export function getAdDiagnostics(): AdDiagnostics {
+  return {
+    native: nativeAdsAvailable(),
+    mode: ADMOB_CONFIG.testMode ? 'Test ads (Google demo units)' : 'Production ads (your AdMob units)',
+    appId: ADMOB_CONFIG.appId, bannerId: ADMOB_CONFIG.bannerId, interstitialId: ADMOB_CONFIG.interstitialId, rewardedId: ADMOB_CONFIG.rewardedId,
+    initialization: diag.initialization, consent: diag.consent, banner: bannerStatus, interstitial: diag.interstitial, rewarded: diag.rewarded,
+  };
+}
+// Asks each ad type to load once (nothing is shown), then reports what happened.
+export async function runAdDiagnostics(): Promise<AdDiagnostics> {
+  if(!nativeAdsAvailable())return getAdDiagnostics();
+  await initializeAds();
+  if(allowed&&!showing) {
+    if(!ready)await preloadInterstitial();
+    if(!rewardReady)await preloadRewarded();
+    setBannerVisible(true);
+    await new Promise<void>(resolve=>setTimeout(resolve,4000));
+  }
+  return getAdDiagnostics();
 }
 export async function openAdPrivacyOptions(): Promise<boolean> {
   if(!nativeAdsAvailable()||showing||rewardRequestActive)return false;

@@ -83,6 +83,7 @@ main.bubble-app{overflow-x:hidden}
 .hub-actions,.hub-tiles,.hub-stats{min-width:0;max-width:100%}
 .hub-tile{min-width:0}
 .setting-toggle+.setting-toggle{margin-top:10px}
+.ad-diagnostics{margin-top:12px}
 .menu-hub{position:relative;background:radial-gradient(ellipse 70% 20% at 8% 100%,#fff 0,#fff0 72%),radial-gradient(ellipse 70% 24% at 96% 104%,#fff 0,#fff0 72%),radial-gradient(circle,#ffffffaa 2px,#fff0 3px) 0 0/34px 34px}
 .hub-stats{padding-top:max(6px,env(safe-area-inset-top,0px))}
 .hub-chip{padding:5px 14px 5px 5px;border:2px solid #fff;background:#ffffffe6;color:#3d4f6b;font-size:15px;box-shadow:0 3px 0 #bcd8e3,0 6px 12px #3b7a9420}
